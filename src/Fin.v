@@ -109,7 +109,43 @@ Section Fin.
       reflexivity.
   Qed.
 
-  
+
+  Lemma FS_inj : 
+    forall {n} (x y : Fin n), Fs x = Fs y ->  x = y.
+  Proof.
+   
+    intros ? ? ? Heq.
+    refine
+      match 
+        Heq in _ = a 
+        return 
+        match 
+          a as a' in Fin n 
+          return 
+            match n with 
+            | 0 => Prop 
+            | S n' => Fin n' -> Prop
+            end 
+        with
+        | Fz => fun _ => True 
+        | Fs y => fun x' => x' = y
+        end x
+    with
+    | eq_refl => eq_refl 
+    end.
+  Qed.
+
+  (*
+
+    inversion Heq as (Heqq).
+    apply Eqdep.EqdepTheory.inj_pair2.
+    exact Heqq.
+  Qed.
+  *)
+
+
+
+    
 
 
 
