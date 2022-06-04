@@ -1,5 +1,5 @@
-From Coq Require Import PeanoNat.
-From Equations Require Import Equations.
+From Coq Require Import 
+  PeanoNat Lia.
 
 Section Fin. 
 
@@ -9,24 +9,24 @@ Section Fin.
 
 
   
-  Fixpoint n_to_fin (n : nat) : Fin (S n) :=
+  Fixpoint nat_to_fin (n : nat) : Fin (S n) :=
     match n with
     | 0 => Fz 
-    | S n' => Fs (n_to_fin n')
+    | S n' => Fs (nat_to_fin n')
   end.
 
 
 
-  Fixpoint fin_to_n {n : nat} (f : Fin n) : nat :=
+  Fixpoint fin_to_nat {n : nat} (f : Fin n) : nat :=
     match f with 
     | Fz => 0 
-    | Fs t => S (fin_to_n t)
+    | Fs t => S (fin_to_nat t)
     end.
   
 
 
   Lemma n_to_fin_to_fin_to_n_id : 
-    forall (n : nat), fin_to_n (n_to_fin n) = n.
+    forall (n : nat), fin_to_nat (nat_to_fin n) = n.
   Proof.
     refine (
       fix Fn n :=
@@ -59,7 +59,7 @@ Section Fin.
 
 
   Lemma cast_fin : forall {n : nat} (f : Fin (S n)), 
-    Fin (S (fin_to_n f)).
+    Fin (S (fin_to_nat f)).
   Proof.
     refine (fix Fn n :=
       match n as n' return n = n' -> _ with
@@ -80,12 +80,12 @@ Section Fin.
       pose proof (Fn _ t) as Ft.
       subst; simpl.
       exact (Fs Ft).
-  Defined. (* or Qed? *)
+  Defined.
    
 
   Lemma fin_to_n_to_n_to_fin_id : 
     forall (n : nat) (f : Fin (S n)), 
-      n_to_fin (fin_to_n f) = @cast_fin _ f.
+      nat_to_fin (fin_to_nat f) = @cast_fin _ f.
   Proof.
     refine (fix Fn n :=
       match n as n' return n = n' -> _ with
@@ -134,6 +134,7 @@ Section Fin.
     | eq_refl => eq_refl 
     end.
   Qed.
+  
 
   (*
 
@@ -143,7 +144,24 @@ Section Fin.
   Qed.
   *)
 
+  Lemma fin_to_nat_lt :
+    forall {n : nat} (f : Fin n), 
+    fin_to_nat f < n.
+  Proof.
+    induction n.
+    + intros f.
+      pose proof (fin_inv_0 f) as Hf;
+      refine (match Hf with end).
+    + intros f. 
+      pose proof (fin_inv_S f) as [H | (t & H)].
+      subst; simpl.
+      apply Nat.lt_0_succ.
+      subst; simpl.
+      apply Lt.lt_n_S,
+      IHn.
+  Qed.
 
+    
 
     
 
