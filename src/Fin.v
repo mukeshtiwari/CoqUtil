@@ -162,6 +162,31 @@ Section Fin.
   Qed.
 
     
+  Definition of_nat : forall (p n : nat), 
+    (Fin n) + {m | p = n + m}.
+  Proof.
+    intros p n.
+    revert n p.
+    refine (fix Fn n := 
+      match n as n' return n' = n -> 
+        forall pt, (Fin n') + {m | pt = n' + m}  with
+      | 0 => fun He p => inr (exist _ p eq_refl)
+      | S n' => fun He p => 
+        match p as p' return p = p' -> _ with 
+        | 0 => fun Hp => inl Fz
+        | S p' => fun Hp => match Fn n' p' with 
+          | inl t => inl (Fs t) 
+          | inr (exist _ m e) => inr (exist _ m _)
+          end 
+        end eq_refl
+      end eq_refl).
+      rewrite e.
+      reflexivity.
+  Defined.
+
+  Print f_equal.
+
+
 
     
 
