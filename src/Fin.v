@@ -36,7 +36,7 @@ Section Fin.
         end).
       simpl; rewrite Fn.
       exact eq_refl.
-  Qed.
+  Defined.
 
 
   Lemma fin_inv_0 (f : Fin 0) : False.
@@ -107,13 +107,14 @@ Section Fin.
       subst; simpl.
       rewrite Ft.
       reflexivity.
-  Qed.
+  Defined.
+
+
 
 
   Lemma FS_inj : 
     forall {n} (x y : Fin n), Fs x = Fs y ->  x = y.
   Proof.
-   
     intros ? ? ? Heq.
     refine
       match 
@@ -133,7 +134,7 @@ Section Fin.
     with
     | eq_refl => eq_refl 
     end.
-  Qed.
+  Defined.
   
 
   (*
@@ -159,9 +160,11 @@ Section Fin.
       subst; simpl.
       apply Lt.lt_n_S,
       IHn.
-  Qed.
+  Defined.
 
     
+  (** of_nat p n returns the p{^ th} element of 
+      fin n if p < n, othewise a proof that n <= p else *)
   Definition of_nat : forall (p n : nat), 
     (Fin n) + {m | p = n + m}.
   Proof.
@@ -184,7 +187,31 @@ Section Fin.
       reflexivity.
   Defined.
 
-  Print f_equal.
+
+  Definition of_nat_lt : forall {p n : nat}, p < n -> Fin n.
+  Proof.
+    intros ? ?.
+    revert n p.
+    refine 
+      (fix Fn n :=
+        match n as n' 
+          return n = n' -> 
+            forall p, p < n' -> Fin n'
+        with
+        | 0 => fun Hn p Hp => False_rect _ (PeanoNat.Nat.nlt_0_r p Hp)
+        | S n' => fun Hn p => 
+            match p as p' 
+              return p = p' -> p' < S n' -> Fin (S n') 
+            with 
+            | 0 => fun Hp Hsp => @Fz _  
+            | S p' => fun Hp Hsp => 
+              @Fs _ (Fn n' p' (proj2 (Nat.succ_lt_mono _ _ ) Hsp)) 
+            end eq_refl 
+        end eq_refl).
+    Defined.
+       
+
+ 
 
 
 
