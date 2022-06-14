@@ -25,7 +25,7 @@ Section Fin.
   
 
 
-  Lemma n_to_fin_to_fin_to_n_id : 
+  Lemma nat_to_fin_and_fin_to_nat_inv : 
     forall (n : nat), fin_to_nat (nat_to_fin n) = n.
   Proof.
     refine (
@@ -83,7 +83,7 @@ Section Fin.
   Defined.
    
 
-  Lemma fin_to_n_to_n_to_fin_id : 
+  Lemma fin_to_nat_and_nat_to_fin_inv : 
     forall (n : nat) (f : Fin (S n)), 
       nat_to_fin (fin_to_nat f) = @cast_fin _ f.
   Proof.
@@ -208,24 +208,56 @@ Section Fin.
               @Fs _ (Fn n' p' (proj2 (Nat.succ_lt_mono _ _ ) Hsp)) 
             end eq_refl 
         end eq_refl).
-    Defined.
-       
-
- 
+  Defined.
 
 
+  Require Import Eqdep_dec Arith.
 
-    
+  Fact uip_nat {n : nat} (e : n = n) : e = eq_refl.
+  Proof. apply UIP_dec, eq_nat_dec. Qed.
+
+  Fact le_inv n m (H : n <= m) :
+      (exists e : m = n, eq_rect _ _ H _ e = le_n n)
+    \/ (exists m' (e : m = S m') (H' : n <= m'), 
+      eq_rect _ _ H _ e = le_S _ _ H').
+  Proof.
+    revert m H.
+    intros ? [ | m H ].
+    + left; now exists eq_refl.
+    + right; now exists m, eq_refl, H.
+  Qed.
+
+  Require Import Equations.Prop.Equations.
+  Set Equations With UIP.
+  Scheme le_indd := Induction for le Sort Prop.
+
+  Lemma le_pair_ind :
+    forall (n : nat)
+    (P : forall m : nat, n <= m -> n <= m -> Prop),
+    P n (le_n n) (le_n n) ->
+    (forall (m : nat) (l h : n <= m), P m l h ->
+      P (S m) (le_S n m l) (le_S n m h)) ->
+    forall (m : nat) (l h : n <= m), P m l h.
+  Proof.
+    intros ? P Hb Hc.
+    refine(
+      fix Fn m l :=
+      match l as lp in (_ <= mp) return forall h, P mp lp h with
+      | le_n _  => _ 
+      | le_S _ m lp => _
+      end).
+    + intro h.
+      inversion h.
+      assert (Ht : h = le_n n \/ exists w, h = le_S _ _ h).
+      destruct (le_inv _ _ h) as [ (e & H) | (m' & e & H1 & H2) ].
+      ++ now rewrite (uip_nat e) in H.
+      ++ nia.
+    + intro h.
+      destruct (le_inv _ _ h) as [ (e & H) | (m' & e & H1 & H2) ].
+      ++ nia.
+      ++ injection e; intros H3.
+        revert e H1 H2; rewrite <- H3; intros e H1 H2.
 
 
-
-  
-  
-
-    
-
-
-  
-
-
-  
+      
+  Admitted.
