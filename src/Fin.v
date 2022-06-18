@@ -265,8 +265,10 @@ Section Fin.
       exact eq_refl.
     + abstract nia.
     + clear Fn.
-      (* It was a hunch from Dominiques Solution but 
-      why do I need to clear it? *)
+      (* It was a hunch from Dominique's Solution but 
+      why do I need to clear it?
+      Now, I see. 
+      *)
       destruct m.
       ++ exact idProp.
       ++ abstract nia.
@@ -321,29 +323,18 @@ Section Fin.
       destruct n. 
       ++ exact idProp.
       ++ abstract nia.  
-    +
-    
-      
+    + 
       assert (Hwt : exists mt', S mt' = S nt).
       destruct mt.
       congruence.
       exists mt; exact Heq.
       destruct Hwt as (mt' & Hm).
-      inversion Hm as (Hmm).
+      inversion Hm as (Hmm);
       clear Hm.
-      assert (Hwt : nw = mt').
-      subst; reflexivity.
-      
+      (* I want to substitute 
 
-      rewrite <-Hmm in pf.
-      subst.
-
-      subst; simpl.
-      apply Pb. 
-      Guarded.
-      exact (Fn nt Hnt Hnw).
-      Guarded.
-
+      *)
+     
       
       
 
