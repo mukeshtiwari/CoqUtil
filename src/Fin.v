@@ -303,12 +303,47 @@ Section Fin.
         | le_n _ =>  fun pf => _ 
         | le_S _ nt Hnt => fun pf => _  
         end eq_refl
-      | le_S _ nt Hnt => _
+      | le_S _ nt Hnt => fun Heq Hnb => 
+        match Hnb as Hnb' in (_ <= S np)
+          return 
+            forall (pf : np = nt),
+            P (S nt) (le_S n nt Hnt) 
+              (eq_rect np (fun w => n <= S w) Hnb' nt pf)
+        with
+        | le_n _ => _ 
+        | le_S _ nw Hnw => fun pf => _ 
+        end eq_refl
       end eq_refl).
     + rewrite (uip_nat pf).
       exact Pa.
     + abstract nia.
-    + 
+    + clear Fn.
+      destruct n. 
+      ++ exact idProp.
+      ++ abstract nia.  
+    +
+    
+      
+      assert (Hwt : exists mt', S mt' = S nt).
+      destruct mt.
+      congruence.
+      exists mt; exact Heq.
+      destruct Hwt as (mt' & Hm).
+      inversion Hm as (Hmm).
+      clear Hm.
+      assert (Hwt : nw = mt').
+      subst; reflexivity.
+      
+
+      rewrite <-Hmm in pf.
+      subst.
+
+      subst; simpl.
+      apply Pb. 
+      Guarded.
+      exact (Fn nt Hnt Hnw).
+      Guarded.
+
       
       
 
