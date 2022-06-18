@@ -330,10 +330,31 @@ Section Fin.
       exists mt; exact Heq.
       destruct Hwt as (mt' & Hm).
       inversion Hm as (Hmm);
-      clear Hm.
+      clear Hm. 
+      symmetry in Hmm.
+      assert (Hmnw : nw = mt').
+      apply eq_trans with nt;
+      try assumption.
+     
+
       (* I want to substitute 
 
       *)
+      subst; simpl.
+      apply Pb.
+      Guarded.
+      (* The condition holds up to here*)
+      apply Fn.
+      Fail Guarded.
+      (* 
+        Recursive call to Fn has principal argument 
+        equal to "nt" instead of a subterm of "mt".
+
+        Understandable but I mt = S nt so I get 
+        exists mt', S mt' = S nt but I can't do rewrite in 
+        the goal because it makes it ill-typed
+      *)
+
      
       
       
