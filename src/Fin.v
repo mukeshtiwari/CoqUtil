@@ -1,5 +1,6 @@
 From Coq Require Import 
-  PeanoNat Lia.
+  PeanoNat Lia Eqdep_dec Arith.
+
 
 Section Fin. 
 
@@ -137,13 +138,7 @@ Section Fin.
   Defined.
   
 
-  (*
 
-    inversion Heq as (Heqq).
-    apply Eqdep.EqdepTheory.inj_pair2.
-    exact Heqq.
-  Qed.
-  *)
 
   Lemma fin_to_nat_lt :
     forall {n : nat} (f : Fin n), 
@@ -211,11 +206,11 @@ Section Fin.
   Defined.
 
 
-  Require Import Eqdep_dec Arith.
 
   Fact uip_nat {n : nat} (e : n = n) : e = eq_refl.
   Proof. apply UIP_dec, eq_nat_dec. Qed.
   
+
   Fact le_inv n m (H : n <= m) :
       (exists e : m = n, eq_rect _ _ H _ e = le_n n)
     \/ (exists m' (e : m = S m') (H' : n <= m'), 
@@ -228,10 +223,6 @@ Section Fin.
   Qed.
  
   
-  Require Import Equations.Prop.Equations.
-  Set Equations With UIP.
-  Scheme le_indd := Induction for le Sort Prop.
-
   
   Lemma le_unique : forall (m n : nat)
     (p q : m <= n), p = q.
@@ -276,7 +267,7 @@ Section Fin.
 
 
   
-  Lemma le_pair_indd :
+  Lemma le_pair_induction:
     forall (n : nat)
     (P : forall m : nat, n <= m -> n <= m -> Prop),
     P n (le_n n) (le_n n) ->
@@ -336,8 +327,11 @@ Section Fin.
     (p q : m <= n), p = q.
   Proof.
     intros ? ? ? ?.
-    apply (le_pair_indd m
-      (fun (n : nat) (a : m <= n) (b : m <= n) => a = b)).
+    apply (le_pair_induction m
+      (fun 
+        (n : nat) 
+        (a : m <= n) 
+        (b : m <= n) => a = b)).
     + exact eq_refl.
     + intros ? ? ? He;
       subst; reflexivity.
