@@ -9,7 +9,38 @@ Section Fin.
   | Fs {n : nat} : Fin n -> Fin (S n).
 
 
+  Fact uip_nat {n : nat} (e : n = n) : e = eq_refl.
+  Proof. apply UIP_dec, eq_nat_dec. Qed.
   
+
+  Lemma fin_ind : 
+    forall (n : nat) (P : Fin (S n) -> Type), 
+    P Fz -> (forall (f : Fin n), P (Fs f)) ->
+    forall fw : Fin (S n), P fw.
+  Proof.
+    intros ? ? Hfz Hfs.
+    refine (
+      fix Fn fw :=
+      match fw as fw' in Fin (S np)
+        return
+          forall (pf : np = n), 
+            fw = (eq_rect np (fun wp => Fin (S wp)) fw' n pf) -> 
+            P (eq_rect np (fun wp => Fin (S wp)) fw' n pf)
+      with 
+      | Fz => fun Heq Hf => _ 
+      | Fs _ => fun Heq Hf => _ 
+      end eq_refl eq_refl).
+    + subst.
+      exact Hfz.
+    + subst.
+      apply Hfs.
+  Qed.
+
+  (* 
+    Show Proof. 
+    Print EqdepFacts.internal_eq_rew_r_dep.
+  *)
+
   Fixpoint nat_to_fin (n : nat) : Fin (S n) :=
     match n with
     | 0 => Fz 
@@ -207,8 +238,6 @@ Section Fin.
 
 
 
-  Fact uip_nat {n : nat} (e : n = n) : e = eq_refl.
-  Proof. apply UIP_dec, eq_nat_dec. Qed.
   
 
   Fact le_inv n m (H : n <= m) :
@@ -336,3 +365,10 @@ Section Fin.
     + intros ? ? ? He;
       subst; reflexivity.
   Qed.
+
+
+
+     
+
+
+
