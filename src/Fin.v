@@ -265,10 +265,6 @@ Section Fin.
       exact eq_refl.
     + abstract nia.
     + clear Fn.
-      (* It was a hunch from Dominique's Solution but 
-      why do I need to clear it?
-      Now, I see. 
-      *)
       destruct m.
       ++ exact idProp.
       ++ abstract nia.
@@ -281,14 +277,14 @@ Section Fin.
 
   
   Lemma le_pair_indd :
-    forall (n m : nat)
+    forall (n : nat)
     (P : forall m : nat, n <= m -> n <= m -> Prop),
     P n (le_n n) (le_n n) ->
     (forall (m : nat) (Ha Hb : n <= m), P m Ha Hb ->
       P (S m) (le_S n m Ha) (le_S n m Hb)) ->
     forall (mt : nat) (Hna Hnb : n <= mt), P mt Hna Hnb.
   Proof.
-    intros ? ? ? Pa Pb.
+    intros ? ? Pa Pb.
     refine(
       fix Fn mt Hna :=
       match Hna as Hna' in (_ <= mtp) 
@@ -323,42 +319,26 @@ Section Fin.
       destruct n. 
       ++ exact idProp.
       ++ abstract nia.  
-    + 
-      assert (Hwt : exists mt', S mt' = S nt).
-      destruct mt.
-      congruence.
-      exists mt; exact Heq.
-      destruct Hwt as (mt' & Hm).
-      inversion Hm as (Hmm);
-      clear Hm. 
-      symmetry in Hmm.
-      assert (Hmnw : nw = mt').
-      apply eq_trans with nt;
-      try assumption.
-     
-
-      (* I want to substitute 
-
-      *)
-      subst; simpl.
-      apply Pb.
-      Guarded.
-      (* The condition holds up to here*)
-      apply Fn.
-      Fail Guarded.
-      (* 
-        Recursive call to Fn has principal argument 
-        equal to "nt" instead of a subterm of "mt".
-
-        Understandable but I mt = S nt so I get 
-        exists mt', S mt' = S nt but I can't do rewrite in 
-        the goal because it makes it ill-typed
-      *)
-
-     
-      
-      
+    +
+      destruct mt as [|nt'].
+      ++ abstract nia.
+      ++ inversion Heq as [Heqp];
+         clear Heq.
+         specialize (Fn nt').
+         subst.
+         apply Pb. 
+         apply Fn.
+  Qed.
 
 
-      
-  Admitted.
+  Lemma le_unique_using_ind : 
+    forall {m n : nat}
+    (p q : m <= n), p = q.
+  Proof.
+    intros ? ? ? ?.
+    apply (le_pair_indd m
+      (fun (n : nat) (a : m <= n) (b : m <= n) => a = b)).
+    + exact eq_refl.
+    + intros ? ? ? He;
+      subst; reflexivity.
+  Qed.
