@@ -306,7 +306,7 @@ Section Fin.
   Proof.
     intros ? ? Pa Pb.
     refine(
-      fix Fn mt Hna :=
+      fix Fn mt Hna {struct Hna}:=
       match Hna as Hna' in (_ <= mtp) 
         return 
           mt = mtp -> 
@@ -339,17 +339,9 @@ Section Fin.
       destruct n. 
       ++ exact idProp.
       ++ abstract nia.  
-    +
-      destruct mt as [|nt'].
-      ++ abstract nia.
-      ++ inversion Heq as [Heqp];
-         clear Heq.
-         specialize (Fn nt').
-         subst.
-         apply Pb. 
-         apply Fn.
+    + subst.
+      apply Pb, Fn.
   Qed.
-
 
   Lemma le_unique_using_ind : 
     forall {m n : nat}
