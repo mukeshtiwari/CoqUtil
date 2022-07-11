@@ -47,8 +47,30 @@ Section Vector.
     end eq_refl).
   Defined.
    
+  
+  Definition example_for_Neel {A : Type} {m n : nat} : 
+    Vector A m -> Vector A n -> Vector A (m + n).
+  Proof.
+    refine(
+      (* Let's write a custom fixpoint and see the 
+        recursive case *)
+      fix Fn u {struct u} := 
+      match u as u' in Vector _ m' 
+        return forall (pf : m = m'),
+          u = eq_rect m' (fun w => Vector A w) 
+            u' m (eq_sym pf) ->
+          Vector A n -> Vector A (m' + n)
+      with 
+      | Nil => fun Hu Hv v => v
+      | Cons h t => fun Hu Hv v  => _ 
+      end eq_refl eq_refl).
+    (* You can see that Fn, induction hypothesis, 
+      is not very strong *)
+  Abort.
+
+
   Definition vector_append_fourth {A : Type} {m n : nat} 
-    (u : Vector A m) (v : Vector A n) : Vector A (m + n).
+     (u : Vector A m) (v : Vector A n) : Vector A (m + n).
   Proof.
     generalize dependent n.
     generalize dependent m.
@@ -68,4 +90,43 @@ Section Vector.
   Defined.
 
 
+  Definition cast_vectors {A : Type} {n m o : nat} :
+    Vector A (m + (n + o)) -> Vector A (m + n + o).
+  Proof.
+    revert m n o.
+    refine(
+      fix Fn m n o u {struct u} :=
+      match u as u' in Vector _ m'
+      return forall (pf : (m + (n + o)) = m'),
+        u = eq_rect m' (fun w => Vector A w) 
+          u' (m + (n + o)) (eq_sym pf) -> 
+        Vector A (m + n + o)
+      with 
+      | Nil => _
+      | Cons h t => _ 
+      end eq_refl eq_refl).
+    intros.
+    rewrite H in u.
+
+    intros u.
+
+  Admitted.  
+
+
+  Theorem vector_append_associative : 
+    forall (A : Type) 
+    (m n o : nat)
+    (u : Vector A m) 
+    (v : Vector A n)
+    (w : Vector A o), 
+    vector_append_fourth (vector_append_fourth u v) w = 
+    cast_vectors (vector_append_fourth u (vector_append_fourth v w)).
+    
+  Proof.
+    
+  Qed.
+  
+
+
+  
    
