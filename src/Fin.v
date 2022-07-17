@@ -306,13 +306,13 @@ Section Fin.
   Proof.
     intros ? ? Pa Pb.
     refine(
-      fix Fn mt Hna {struct Hna}:=
+      fix Fn mt Hna {struct Hna} :=
       match Hna as Hna' in (_ <= mtp) 
         return 
           mt = mtp -> 
           forall Hnb, P mtp Hna' Hnb
       with 
-      | le_n _ => fun Hna Hnb => 
+      | le_n _ => fun _ Hnb => 
         match Hnb as Hnb' in (_ <= nt) 
           return 
             forall (pf : nt = n),
