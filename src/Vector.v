@@ -1,3 +1,9 @@
+Require Import Nat
+  PeanoNat Coq.Logic.EqdepFacts
+  Coq.Logic.Eqdep_dec
+  Coq.Arith.Peano_dec.
+
+
 
 Section Vector.
 
@@ -48,25 +54,6 @@ Section Vector.
   Defined.
    
   
-  Definition example_for_Neel {A : Type} {m n : nat} : 
-    Vector A m -> Vector A n -> Vector A (m + n).
-  Proof.
-    refine(
-      (* Let's write a custom fixpoint and see the 
-        recursive case *)
-      fix Fn u {struct u} := 
-      match u as u' in Vector _ m' 
-        return forall (pf : m = m'),
-          u = eq_rect m' (fun w => Vector A w) 
-            u' m (eq_sym pf) ->
-          Vector A n -> Vector A (m' + n)
-      with 
-      | Nil => fun Hu Hv v => v
-      | Cons h t => fun Hu Hv v  => _ 
-      end eq_refl eq_refl).
-    (* You can see that Fn, induction hypothesis, 
-      is not very strong *)
-  Abort.
 
 
   Definition vector_append_fourth {A : Type} {m n : nat} 
@@ -89,44 +76,129 @@ Section Vector.
       end eq_refl eq_refl).
   Defined.
 
-
-  Definition cast_vectors {A : Type} {n m o : nat} :
-    Vector A (m + (n + o)) -> Vector A (m + n + o).
+  
+  Lemma vector_nil_l {A : Type} {m : nat} :
+    forall (u : Vector A m),
+    vector_append_fourth Nil u = u.
   Proof.
-    revert m n o.
-    refine(
-      fix Fn m n o u {struct u} :=
-      match u as u' in Vector _ m'
-      return forall (pf : (m + (n + o)) = m'),
-        u = eq_rect m' (fun w => Vector A w) 
-          u' (m + (n + o)) (eq_sym pf) -> 
-        Vector A (m + n + o)
-      with 
-      | Nil => _
-      | Cons h t => _ 
-      end eq_refl eq_refl).
-    intros.
-    rewrite H in u.
-
-    intros u.
-
-  Admitted.  
-
-
-  Theorem vector_append_associative : 
-    forall (A : Type) 
-    (m n o : nat)
-    (u : Vector A m) 
-    (v : Vector A n)
-    (w : Vector A o), 
-    vector_append_fourth (vector_append_fourth u v) w = 
-    cast_vectors (vector_append_fourth u (vector_append_fourth v w)).
-    
-  Proof.
-    
+    refine (fun _ => eq_refl).
   Qed.
-  
+
+  Definition cast_vector {A : Type} {m n : nat} : 
+    Vector A m -> m = n -> Vector A n.
+  Proof.
+    (* 
+    intros u H.
+    exact (eq_rect m (fun w => Vector A w) u n H). *)
+    refine (fun u H => 
+      match H with 
+      | eq_refl => u
+      end).
+  Defined.
+    
+
+  Lemma nat_eq_dec : 
+    forall x y : nat, x = y \/ x <> y.
+  Proof.
+    intros ? ?.
+    case (eq_nat_dec x y); intro Ha.
+    + left; exact Ha.
+    + right; exact Ha.
+  Qed.
+
+
+  Lemma cast_vector_rewrite_gen_tactic {A : Type} {m n : nat} :
+    forall (a : A) 
+    (u : Vector A m) 
+    (Ha : S m = S n)
+    (Hb : m = n),
+    cast_vector (Cons a u) Ha = 
+    Cons a (cast_vector u Hb).
+  Proof.
+    intros ? ? ? ?.
+    subst.
+    assert (Ha = eq_refl).
+    apply Eqdep_dec.eq_proofs_unicity,
+    nat_eq_dec.
+    subst.
+    reflexivity.
+  Qed.
 
 
   
+  Lemma cast_vector_rewrite_gen_prog {A : Type} {m n : nat} :
+    forall (a : A) 
+    (u : Vector A m) 
+    (Ha : S m = S n)
+    (Hb : m = n),
+    cast_vector (Cons a u) Ha = 
+    Cons a (cast_vector u Hb).
+  Proof.
+    intros ? ? ?.
+    refine(
+      match Ha as Ha' in _ = (S n')
+        return 
+          forall (pf : n' = n),
+          Ha = eq_rect (S n') _ Ha' (S n) (eq_S n' n pf) ->
+          forall (Hb : m = n'),
+          cast_vector (Cons a u) Ha' = Cons a (cast_vector u Hb)
+      with
+      | eq_refl => fun pf Hpf Hb => 
+          match Hb as Hb' in (_ = m') 
+          return
+            forall (pfa : m = m'), 
+            Hb = eq_rect m' _ Hb' m (eq_sym pfa) ->
+            cast_vector (Cons a u) eq_refl = 
+            Cons a (cast_vector u Hb')
+          with 
+          | eq_refl => _ 
+          end eq_refl eq_refl
+      end eq_refl eq_refl).
+      cbv.
+      
+      
+      
+
+
+
+
+  Lemma cast_vector_rewrite {A : Type} {m : nat} :
+    forall (a :  A) (u : Vector A m),
+    cast_vector (Cons a u) (plus_n_O (S m)) =
+    Cons a (cast_vector u (plus_n_O m)).
+  Proof.
+    intros a u.
+    apply cast_vector_rewrite_gen.
+  Qed.
+
+
+  Lemma vector_nil_r {A : Type} {m : nat} :
+    forall (u : Vector A m),
+    vector_append_fourth u Nil = 
+    cast_vector u (plus_n_O m).
+  Proof.
+    induction u.
+    + simpl.
+      refine 
+        match plus_n_O 0 with 
+        | eq_refl => eq_refl
+        end.
+    + simpl.
+      symmetry.
+      pose proof cast_vector_rewrite a u as Hu.
+      eapply eq_trans.
+      ++ exact Hu.
+      ++ f_equal.
+         exact (eq_sym IHu).
+  Qed.        
+
+
+
+
+
+    
+
+
+  
+    
    
