@@ -100,6 +100,7 @@ Section Vector.
   Fact uip_nat {n : nat} (e : n = n) : e = eq_refl.
   Proof. apply UIP_dec, eq_nat_dec. Qed.
 
+
   Lemma cast_vector_rewrite_gen_tactic {A : Type} {m n : nat} :
     forall (a : A) 
     (u : Vector A m) 
@@ -147,7 +148,7 @@ Section Vector.
     Cons a (cast_vector u (plus_n_O m)).
   Proof.
     intros a u.
-    apply cast_vector_rewrite_gen.
+    apply cast_vector_rewrite_gen_prog.
   Qed.
 
 
@@ -170,6 +171,7 @@ Section Vector.
       ++ f_equal.
          exact (eq_sym IHu).
   Qed.        
+
 
 
 
