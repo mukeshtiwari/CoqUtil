@@ -97,15 +97,8 @@ Section Vector.
   Defined.
     
 
-  Lemma nat_eq_dec : 
-    forall x y : nat, x = y \/ x <> y.
-  Proof.
-    intros ? ?.
-    case (eq_nat_dec x y); intro Ha.
-    + left; exact Ha.
-    + right; exact Ha.
-  Qed.
-
+  Fact uip_nat {n : nat} (e : n = n) : e = eq_refl.
+  Proof. apply UIP_dec, eq_nat_dec. Qed.
 
   Lemma cast_vector_rewrite_gen_tactic {A : Type} {m n : nat} :
     forall (a : A) 
@@ -115,16 +108,13 @@ Section Vector.
     cast_vector (Cons a u) Ha = 
     Cons a (cast_vector u Hb).
   Proof.
-    intros ? ? ? ?.
+    intros ? ? ? ?;
     subst.
-    assert (Ha = eq_refl).
-    apply Eqdep_dec.eq_proofs_unicity,
-    nat_eq_dec.
-    subst.
-    reflexivity.
+    rewrite (uip_nat Ha).
+    exact eq_refl.
   Qed.
 
-
+ 
   
   Lemma cast_vector_rewrite_gen_prog {A : Type} {m n : nat} :
     forall (a : A) 
@@ -139,29 +129,18 @@ Section Vector.
       match Ha as Ha' in _ = (S n')
         return 
           forall (pf : n' = n),
-          Ha = eq_rect (S n') _ Ha' (S n) (eq_S n' n pf) ->
+          Ha = eq_rect (S n') _ Ha' (S n) (eq_S n' n pf) ->  
           forall (Hb : m = n'),
           cast_vector (Cons a u) Ha' = Cons a (cast_vector u Hb)
       with
-      | eq_refl => fun pf Hpf Hb => 
-          match Hb as Hb' in (_ = m') 
-          return
-            forall (pfa : m = m'), 
-            Hb = eq_rect m' _ Hb' m (eq_sym pfa) ->
-            cast_vector (Cons a u) eq_refl = 
-            Cons a (cast_vector u Hb')
-          with 
-          | eq_refl => _ 
-          end eq_refl eq_refl
+      | eq_refl => fun pf Hpf Hb => _
       end eq_refl eq_refl).
-      cbv.
+      rewrite (uip_nat Hb).
+      exact (eq_refl).
+  Defined.
       
       
       
-
-
-
-
   Lemma cast_vector_rewrite {A : Type} {m : nat} :
     forall (a :  A) (u : Vector A m),
     cast_vector (Cons a u) (plus_n_O (S m)) =
