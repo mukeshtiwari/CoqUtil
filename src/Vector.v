@@ -97,7 +97,7 @@ Section Vector.
       end.
   Defined.
 
-
+  
   Lemma uip_nat {n : nat} (pf : n = n) : pf = eq_refl.
   Proof.
     apply UIP_dec,
@@ -148,21 +148,22 @@ Section Vector.
           (S m) (eq_S _ _ (eq_sym pf)) 
         with
         | eq_refl => _
-        end eq_refl (@uip_nat m Hbpf)
+        end eq_refl _ 
       end eq_refl eq_refl).
-    + congruence.
     + intros *.
       cbn.
       rewrite (uip_nat pf).
       simpl.
       reflexivity.
+    + simpl.
+      apply uip_nat. 
   Defined.
   
 
   Lemma append_nil_right_ind {A : Type} {n : nat} :
     forall (a : A) (u : Vector A n),
-    cast_vector (Cons a u) (plus_n_O (S n)) = (* S n = S n + 0 *)
-    Cons a (cast_vector u (plus_n_O n)). (* n = n + 0 *)
+    cast_vector (Cons a u) (plus_n_O (S n)) = 
+    Cons a (cast_vector u (plus_n_O n)). 
   Proof.
     intros *.
     apply append_nil_right_ind_gen_tactic.
