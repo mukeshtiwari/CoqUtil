@@ -112,6 +112,19 @@ Section Mat.
       subst; simpl; f_equal.
       apply IHn.
   Defined.
+
+  
+  Lemma finite_vector_back_forth : 
+    forall (n : nat) (f : Fin.t n -> R) (i : Fin.t n),
+    vector_to_finite_fun (finite_fun_to_vector f) i = f i.
+  Proof.
+    intros ? ? ?.
+    remember (finite_fun_to_vector f) as v.
+    rewrite <-vector_to_finite_fun_correctness.
+    subst.
+    rewrite finite_fun_to_vector_correctness.
+    reflexivity.
+  Qed.
         
 End Mat.
 
@@ -152,6 +165,7 @@ Section Mx.
       apply IHn.
   Defined.
 
+
   Lemma finite_to_matrix_back_and_forth : 
     forall n m (mx : Fin.t n -> Fin.t m -> R)
     (i : Fin.t n) (j : Fin.t m), 
@@ -160,7 +174,10 @@ Section Mx.
   Proof.
     unfold matrix_to_finite_fun, 
     finite_fun_to_matrix.
-  Admitted.
+    intros until j.
+    rewrite !finite_vector_back_forth.
+    reflexivity.
+  Qed.
 
 End Mx.
 
