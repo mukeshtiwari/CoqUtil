@@ -113,17 +113,15 @@ Section Mat.
       apply IHn.
   Defined.
 
-  
+
   Lemma finite_vector_back_forth : 
     forall (n : nat) (f : Fin.t n -> R) (i : Fin.t n),
     vector_to_finite_fun (finite_fun_to_vector f) i = f i.
   Proof.
     intros ? ? ?.
-    remember (finite_fun_to_vector f) as v.
-    rewrite <-vector_to_finite_fun_correctness.
-    subst.
-    rewrite finite_fun_to_vector_correctness.
-    reflexivity.
+    rewrite <-vector_to_finite_fun_correctness,
+    finite_fun_to_vector_correctness.
+    exact eq_refl.
   Qed.
         
 End Mat.
