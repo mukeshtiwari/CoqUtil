@@ -1,11 +1,9 @@
-Require Import Utf8 Lia 
-  Fin Lia Vector List.
-Import ListNotations.
-Set Implicit Arguments.  
+Require Import 
+  Utf8 Fin Lia Vector.
+
 Section Mat.
 
-
-  Variable (R : Type).
+  Context {R : Type}.
 
   Lemma vector_inv_0 (v : Vector.t R 0) :
     v = @Vector.nil R.
@@ -16,7 +14,7 @@ Section Mat.
     reflexivity.
   Defined.
 
-  Lemma vector_inv_S (n : nat) (v : Vector.t R (S n)) :
+  Lemma vector_inv_S {n : nat} (v : Vector.t R (S n)) :
     {x & {v' | v = @Vector.cons _ x _ v'}}.
   Proof.
     refine (match v with
@@ -28,7 +26,7 @@ Section Mat.
   Lemma fin_inv_0 (i : Fin.t 0) : False.
   Proof. refine (match i with end). Defined.
 
-  Lemma fin_inv_S (n : nat) (i : Fin.t (S n)) :
+  Lemma fin_inv_S {n : nat} (i : Fin.t (S n)) :
     (i = Fin.F1) + {i' | i = Fin.FS i'}.
   Proof.
     refine (match i with
@@ -39,7 +37,8 @@ Section Mat.
 
 
   Definition vector_to_finite_fun : 
-    forall n, Vector.t R n -> (Fin.t n -> R).
+    forall {n : nat}, 
+    Vector.t R n -> (Fin.t n -> R).
   Proof.
     induction n.
     + intros v f.
@@ -54,7 +53,8 @@ Section Mat.
 
 
   Definition finite_fun_to_vector : 
-    forall n,  (Fin.t n -> R) -> Vector.t R n.
+    forall {n : nat},  
+    (Fin.t n -> R) -> Vector.t R n.
   Proof.
     induction n.
     + intros f.
@@ -119,9 +119,8 @@ Section Mat.
     vector_to_finite_fun (finite_fun_to_vector f) i = f i.
   Proof.
     intros ? ? ?.
-    rewrite <-vector_to_finite_fun_correctness,
+    now rewrite <-vector_to_finite_fun_correctness,
     finite_fun_to_vector_correctness.
-    exact eq_refl.
   Qed.
         
 End Mat.
@@ -144,6 +143,7 @@ Section Mx.
       @vector_to_finite_fun _ m 
         ((@vector_to_finite_fun _ n mx) x) y.
 
+  
   Lemma matrix_to_finite_back_forth : 
     forall n m (mx : Matrix n m),
     mx = finite_fun_to_matrix (matrix_to_finite_fun mx).
@@ -178,4 +178,13 @@ Section Mx.
   Qed.
 
 End Mx.
+
+(* Can I generalise the it to an arbitrary dimension
+
+  Matrix n m p q r s .... :=
+  Vector R (Vector R (Vector R ...)) n 
+
+  It will be very nice and awesome dependent type programming
+
+  *)
 
