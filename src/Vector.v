@@ -190,7 +190,7 @@ Section Vector.
 
   
   (* generalisation is the key *)
-  Lemma append_associative {A : Type} :
+  Lemma append_associative_gen {A : Type} :
     forall {m : nat} (u : Vector A m) 
     {n o : nat} (v : Vector A n) (w : Vector A o)
     (Ha : m + n + o = m + (n + o)),
@@ -220,6 +220,17 @@ Section Vector.
         apply Fn.
   Defined.
 
+  
+  Lemma append_associative {A : Type} :
+    forall {m : nat} (u : Vector A m) 
+    {n o : nat} (v : Vector A n) (w : Vector A o),
+    vector_append_fourth u (vector_append_fourth v w) =
+    cast_vector (vector_append_fourth (vector_append_fourth u v) w)
+    (eq_sym (Nat.add_assoc m n o)).
+  Proof.
+    intros until w.
+    eapply append_associative_gen.
+  Defined.
 
 
 
