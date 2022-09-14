@@ -195,8 +195,23 @@ Section Vector.
     vector_append_fourth u (vector_append_fourth v w) =
     cast_vector (vector_append_fourth (vector_append_fourth u v) w) Ha.
   Proof.
-  Admitted.
-
+    refine(
+      fix Fn u {struct u} := 
+      match u as u' in Vector _ m' 
+      return m = m' ->  _ 
+      with 
+      | Nil => _ 
+      | Cons _ _ => _ 
+      end eq_refl).
+      + intros Hb ? ? ?;
+        simpl in * |- *.
+        assert (Ht : Ha = eq_refl).
+        apply uip_nat.
+        subst; simpl.
+        exact eq_refl.
+      + admit.
+  Admitted. 
+        
 
 
 
