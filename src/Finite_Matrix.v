@@ -128,7 +128,7 @@ End Mat.
 
 Section Mx.
 
-  Variable (R : Type).
+  Context {R : Type}.
 
   Definition Matrix n m := Vector.t (Vector.t R m) n.
 
@@ -187,4 +187,5 @@ End Mx.
   It will be very nice and awesome dependent type programming
 
   *)
-
+    
+    

@@ -103,6 +103,7 @@ Section Vector.
     apply UIP_dec,
     eq_nat_dec.
   Qed.
+  
 
   Lemma append_nil_right_ind_gen_tactic {A : Type}
     {n m : nat} :
@@ -187,9 +188,14 @@ Section Vector.
       apply append_nil_right_ind.
   Qed.
 
-
-
-
+  
+  Lemma append_associative {A : Type} {m n o : nat} :
+    forall (u : Vector A m) (v : Vector A n) (w : Vector A o)
+    (Ha : m + n + o = m + (n + o)),
+    vector_append_fourth u (vector_append_fourth v w) =
+    cast_vector (vector_append_fourth (vector_append_fourth u v) w) Ha.
+  Proof.
+  Admitted.
 
 
 
