@@ -1,3 +1,7 @@
+From Coq Require Import List Psatz.
+Require Import Utf8.
+Import ListNotations.
+
 Section Wf.
 
   Definition Nat := nat.
