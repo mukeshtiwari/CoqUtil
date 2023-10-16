@@ -1,4 +1,5 @@
-Require Import List Utf8 Vector Fin Psatz.
+Require Import List Utf8 Vector Fin Psatz
+  Coq.Logic.ProofIrrelevance.
 Import Notations ListNotations.
 
 
@@ -13,15 +14,11 @@ Section Definitions.
     intro Ha. 
     + 
       exfalso.
+      inversion Ha as [x Hb].
       refine 
-      (match Ha with 
-      | exist _ x Hb => match Hb with end
-      end).
+      (match Hb with end).
     + 
-      refine 
-      (match Ha with 
-      | exist _ x Hb => _
-      end).
+      inversion Ha as [x Hb].
       refine
       (match x as x' return x = x' -> _ 
       with 
@@ -34,7 +31,7 @@ Section Definitions.
       exact (Fin.FS (IHn Hd)).
   Defined. 
 
-
+  
   Definition Fin_to_fin : 
      ∀ {n : nat}, Fin.t n  -> fin n. 
   Proof.
@@ -45,14 +42,14 @@ Section Definitions.
         forall (pf : n = n'), 
         fn' = eq_rect n (fun w => Fin.t w) fn n' pf -> _ 
     with 
-    | Fin.F1 => fun _ _ => _ 
+    | Fin.F1 => fun _ _ => exist _ 0 _
     | Fin.FS t => fun Ha Hb => match Fn _ t with 
       | exist _ i Hc => exist _ (S i) _ 
     end  
-    end eq_refl eq_refl).
-    + 
-      exists 0; abstract nia. 
-    + 
+    end eq_refl eq_refl);
+    abstract nia. 
+  Defined.
+    
       (* My goal is replace all n0 by n 
       revert fn Hb. 
       rewrite Ha.
@@ -60,16 +57,66 @@ Section Definitions.
       rewrite <- Eqdep_dec.eq_rect_eq_dec in Hb.
       *)
       (* I can also use subst *)
-      subst. 
-      abstract nia.
-  Defined.  
+
+  
+
+
+  Theorem fin_Fin_id :
+    forall (n : nat) (u : fin n), 
+      Fin_to_fin (fin_to_Fin u) = u. 
+  Proof.
+    induction n; intro u. 
+    + 
+      inversion u as [i Ha];
+      try nia. 
+    +
+      destruct u as [i Ha] eqn:Hb.
+      destruct i as [|i].
+      ++
+        simpl; f_equal.
+        eapply proof_irrelevance.
+      ++
+        simpl; rewrite IHn.
+        f_equal.
+        eapply proof_irrelevance.
+  Qed.
+
+
+  Theorem Fin_Fin_id : 
+    forall (n : nat) (u : Fin.t n),
+     fin_to_Fin (Fin_to_fin u) = u. 
+  Proof.
+    refine 
+    (fix Fn n fn {struct fn} : fin_to_Fin (Fin_to_fin fn) = fn := 
+      match fn as fn' in Fin.t n' return 
+        forall (pf : n = n'), 
+        fn' = eq_rect n (fun w => Fin.t w) fn n' pf -> _ 
+      with 
+      | Fin.F1 => _ 
+      | Fin.FS t => _ 
+      end eq_refl eq_refl).
+    +
+      intros * Ha; simpl.
+      reflexivity.
+    +
+      intros * Ha; simpl.
+      destruct (Fin_to_fin t) as [b Hb] eqn:Hc.
+      simpl; f_equal.
+      rewrite <-Fn; f_equal.
+      rewrite Hc; f_equal.
+      eapply proof_irrelevance.
+  Qed.
+
+     
+
+
 
   Eval compute in (@fin_to_Fin 3 (exist _ 2 _)).
   Eval compute in (@Fin_to_fin 3 Fin.F1).
 
 End Definitions.
 
-(* The key to dependent type rewrite is generalisation *)
+
 
 Require Import Lia
   Coq.Unicode.Utf8
@@ -120,3 +167,4 @@ Section Complicated.
   Qed.
 
 End Complicated.
+
