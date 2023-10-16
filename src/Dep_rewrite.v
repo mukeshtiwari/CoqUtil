@@ -3,7 +3,7 @@ Require Import List Utf8 Vector Fin Psatz
 Import Notations ListNotations.
 
 
-Section Definitions. 
+Module Definitions. 
 
   Definition fin (n : nat) : Type := {i | i < n}.
 
@@ -24,7 +24,7 @@ Section Definitions.
       with 
       | 0 => fun Hc => Fin.F1 
       | S y => fun Hc => _ 
-      end eq_refl).
+       end eq_refl).
       rewrite Hc in Hb.
       assert (Hd : fin n).
       exists y. abstract nia.
@@ -58,9 +58,6 @@ Section Definitions.
       *)
       (* I can also use subst *)
 
- 
-  
-    
   Theorem fin_Fin_id :
     forall (n : nat) (u : fin n), 
       Fin_to_fin (fin_to_Fin u) = u. 
@@ -82,7 +79,7 @@ Section Definitions.
   Qed.
 
 
-  Theorem Fin_Fin_id : 
+  Theorem Fin_fin_id : 
     forall (n : nat) (u : Fin.t n),
      fin_to_Fin (Fin_to_fin u) = u. 
   Proof.
@@ -102,8 +99,8 @@ Section Definitions.
       intros * Ha; simpl.
       destruct (Fin_to_fin t) as [b Hb] eqn:Hc.
       simpl; f_equal.
-      rewrite <-Fn; f_equal.
-      rewrite Hc; f_equal.
+      rewrite <-Fn; f_equal. simpl.
+      rewrite Hc. f_equal.
       eapply le_unique.
   Qed.
 
@@ -112,7 +109,7 @@ Section Definitions.
 
 
   Eval compute in (@fin_to_Fin 3 (exist _ 2 _)).
-  Eval compute in (@Fin_to_fin 3 Fin.F1).
+  Eval compute in (proj1_sig (@Fin_to_fin 3 (Fin.FS Fin.F1))).
 
 End Definitions.
 
@@ -128,7 +125,7 @@ Require Import Lia
   Coq.Lists.List.
 
 
-Section Complicated.
+Module Complicated.
 
   Open Scope N_scope.
 
@@ -167,3 +164,32 @@ Section Complicated.
   Qed.
 
 End Complicated.
+
+
+Module Simpl.
+
+  
+  Definition np_total (np : N) :  (np <? 256 = true)%N ->  byte.
+  Proof.
+    intros H.
+    pose proof of_N_None_iff np as Hn.
+    destruct (of_N np) as [b | ].
+    + exact b.
+    + exfalso; abstract (apply N.ltb_lt in H; intuition nia).
+  Defined.
+
+
+  Lemma np_true : forall (np : N) (Ha : (np <? 256 = true)%N) x,
+    of_N np = Some x -> np_total np Ha = x.
+  Proof.
+    intros * Ha.
+    unfold np_total.
+    generalize (of_N_None_iff np) as f.
+    rewrite Ha; intros Hb; reflexivity.
+  Qed.
+
+ End Simpl.
+    
+
+
+    
