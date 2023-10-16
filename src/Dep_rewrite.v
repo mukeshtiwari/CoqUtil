@@ -1,5 +1,5 @@
 Require Import List Utf8 Vector Fin Psatz
-  Coq.Logic.ProofIrrelevance.
+  Peano_dec. 
 Import Notations ListNotations.
 
 
@@ -58,9 +58,9 @@ Section Definitions.
       *)
       (* I can also use subst *)
 
+ 
   
-
-
+    
   Theorem fin_Fin_id :
     forall (n : nat) (u : fin n), 
       Fin_to_fin (fin_to_Fin u) = u. 
@@ -74,11 +74,11 @@ Section Definitions.
       destruct i as [|i].
       ++
         simpl; f_equal.
-        eapply proof_irrelevance.
+        eapply le_unique.
       ++
         simpl; rewrite IHn.
         f_equal.
-        eapply proof_irrelevance.
+        eapply le_unique. 
   Qed.
 
 
@@ -104,7 +104,7 @@ Section Definitions.
       simpl; f_equal.
       rewrite <-Fn; f_equal.
       rewrite Hc; f_equal.
-      eapply proof_irrelevance.
+      eapply le_unique.
   Qed.
 
      
@@ -167,4 +167,3 @@ Section Complicated.
   Qed.
 
 End Complicated.
-
