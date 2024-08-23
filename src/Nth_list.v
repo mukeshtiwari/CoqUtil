@@ -44,7 +44,7 @@ Qed.
 
 (*
 
-  Definition nth_safe {A : Type}
+Definition nth_safe {A : Type}
   (l : list A) (n : nat) (Ha : (n < length l)) : A.
 Proof.
   refine
