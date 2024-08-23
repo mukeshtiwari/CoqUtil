@@ -39,3 +39,56 @@ Proof.
       pose proof (proj1(nth_error_None l n) (eq_sym Ht)).
       nia.
 Qed.
+
+(* using refine *)
+
+(*
+
+  Definition nth_safe {A : Type}
+  (l : list A) (n : nat) (Ha : (n < length l)) : A.
+Proof.
+  refine
+    (match (nth_error l n) as nth return (nth_error l n) = nth -> A with
+     | Some res => fun Hb => res
+     | None => fun Hb => _ 
+     end eq_refl).
+  eapply  nth_error_None in Hb;
+    abstract nia.
+Defined.
+
+(*
+Next Obligation.
+  symmetry in Heq_anonymous. apply nth_error_None in Heq_anonymous. lia.
+Defined.
+*)
+
+Lemma nth_safe_nth: forall
+    {A : Type} (l : list A) (n : nat) d
+    (Ha : (n < length l)), nth_safe l n Ha = nth n l d.  
+Proof.
+  intros *. unfold nth_safe.
+  pose (fn := (fun (la : list A) (na : nat) (Hb : na < length la)
+                  (o : option A) (Hc : nth_error la na = o) =>
+                 match o as nth return nth_error la na = nth -> A with
+                 | Some res => fun _ : nth_error la na = Some res => res
+                 | None => fun Hbt : nth_error la na = None =>
+                             nth_safe_subproof A la na Hb
+                               (match nth_error_None la na with
+                                | conj H _ => H
+                                end Hbt)
+                 end Hc) l n Ha).
+  enough (forall (o : option A) Ht, fn o Ht = nth n l d) as Htt.
+  +
+    eapply Htt.
+  +
+    intros *.
+    destruct o as [x |]. 
+    ++
+      simpl. eapply eq_sym, nth_error_nth.
+      exact Ht.
+    ++
+      pose proof (proj1(nth_error_None l n) Ht).
+      nia.
+Qed.      
+
+*)
