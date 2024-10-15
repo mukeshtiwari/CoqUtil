@@ -1,7 +1,6 @@
 From Coq Require Import List Utf8 RelationClasses
                  PeanoNat Psatz.
 
-
 Section Accinv.
 
   Inductive Accinv {A : Type} (R : A -> A -> Prop) (x : A) : Prop :=
@@ -147,3 +146,69 @@ Section Accinv.
 
 
 End Accinv.
+
+
+Section Find.
+
+  Variable (P : nat -> Prop).
+  Variable (Hdec : forall (n : nat), {P n} + {~P n}).
+
+  Theorem p_implies_acc : forall (u : nat), P u -> Accinv  (fun x y : nat => y = 1 + x ∧ ~P x) u.
+  Proof using Type.
+    intros u Hu.
+    constructor; intros y [Hy Hny].
+    contradiction.
+  Qed.
+
+
+  Theorem p_eventually_implies_acc : forall (n : nat) (u : nat), P (n + u) -> Accinv  (fun x y : nat => y = 1 + x ∧ ~P x) u.
+  Proof.
+    induction n as [|n Ihn]; simpl.
+    +
+      eapply p_implies_acc.
+    +
+      intros u Hu.
+      constructor; intros y [Hy Hny].
+      apply Ihn. rewrite Hy.
+      replace (n + S u) with (S (n + u)).
+      exact Hu.
+      nia.
+  Defined.
+
+
+
+  
+  Theorem accessibility_inv : (exists n : nat, P n) ->  Accinv (fun x y : nat => y = 1 + x ∧ ~P x) 0.
+  Proof using Type.
+    intros [n Hn].
+    eapply p_eventually_implies_acc with (n := n).
+    replace (n + 0) with n.
+    exact Hn.
+    nia.
+  Qed.
+  
+    
+  Theorem linear_search : (exists (n : nat), P n) -> {n : nat | P n}.
+  Proof using Type*.
+    intro Ha.
+    refine((fix fn u (acc : Accinv (fun x y => y = 1 + x /\ ~P x) u) {struct acc} :=
+              match Hdec u with
+              | left Hb => exist _ u Hb
+              | right Hb  => _ 
+              end) 0 _).
+    +
+      refine (fn (1 + u) _).
+      inversion acc as (Hacc). 
+      eapply Hacc; split;
+        [reflexivity | assumption].  
+    +
+      eapply accessibility_inv.
+      assumption.
+  Defined.
+  
+End Find.
+
+(* 
+Require Import Extraction.
+Recursive Extraction linear_search.
+*)
