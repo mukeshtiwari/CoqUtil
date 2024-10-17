@@ -1,5 +1,5 @@
 From Coq Require Import Lia Arith.
-
+(* Thanks to Li-yao *)
 Section Gcd.
 
   Fixpoint gcd_rec (n m : nat) (acc : Acc lt (n + m)) {struct acc} :  nat.
