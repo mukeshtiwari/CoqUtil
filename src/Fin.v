@@ -150,7 +150,7 @@ Section Fin.
     intros ? ? ? Heq.
     refine
       match 
-        Heq in _ = a 
+        Heq in @eq _ _ a
         return 
         match 
           a as a' in Fin n 
@@ -184,7 +184,7 @@ Section Fin.
       subst; simpl.
       apply Nat.lt_0_succ.
       subst; simpl.
-      apply Lt.lt_n_S,
+      apply (proj1 (Nat.succ_lt_mono (fin_to_nat t) n)), 
       IHn.
   Defined.
 
@@ -358,9 +358,4 @@ Section Fin.
       subst; reflexivity.
   Qed.
 
-
-
-     
-
-
-
+End Fin.
