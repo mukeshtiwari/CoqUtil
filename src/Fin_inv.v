@@ -93,21 +93,21 @@ Proof.
 Defined.
 
 
+Definition Fin_t_0_inv i : ∀ (P : t 0 → Type), P i :=
+  match i with end.
 
-Lemma Fin_t_S_inv_Dominique_gen n (P : t (S n) → Type) :
-   P F1 → (∀ i : t n, P (FS i)) →  ∀ i : t (S n), P i.
+Definition Fin_t_S_inv n i :
+  ∀ (P : t (S n) → Type), P F1 → (∀i, P (FS i)) → P i.
 Proof.
-  intros * Ha Hb i.
-  (* Is this possible to prove by induciotn on i? *)
-  
-
-
-  (* 
-  generalize dependent n.
-  set (fn := fun (w : nat) (Pa : Fin.t (S w) -> Type) (Ha : w = n) (v : Fin.t (S w))  => Pa v).
-  intro i.
-  change (P i) with (fn n P eq_refl i).
-  induction i.
-  *)
-Admitted.
-
+  refine 
+    match i with 
+    | F1 => _ 
+    | FS j => _ 
+    end.
+  +
+    intros * Ha Hb.
+    exact Ha.
+  +
+    intros * Ha Hb.
+    exact (Hb j).
+Defined.
