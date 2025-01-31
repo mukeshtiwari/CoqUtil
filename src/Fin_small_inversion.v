@@ -36,3 +36,81 @@ Section Fin.
   Qed.
 
 End Fin.
+
+Section EQ.
+
+From Coq Require Import Utf8 Fin Vector.
+
+Import VectorNotations.
+
+Definition option_lift {A : Type} (P : A -> Prop) (o : option A) : Prop :=
+  match o return Prop 
+  with
+  | Some a => P a 
+  | None => False
+  end.
+
+Theorem option_inv {A : Type} (a b : A) (e : Some a = Some b) : a = b.
+Proof.
+  refine 
+    match e in @eq _ _ y return option_lift (@eq _ a) y 
+    with 
+    | eq_refl => eq_refl 
+    end.
+Defined.
+
+Definition fin_lift {n : nat} (P : Fin.t n -> Prop) (i : Fin.t (S n)) : Prop :=
+  match i in Fin.t m return (Fin.t (pred m) -> Prop) -> Prop  
+  with
+  | FS i => fun P => P i 
+  | F1 => fun _ => False
+  end P.
+
+Theorem fin_inv {n : nat} (a b : Fin.t n) (e : FS a = FS b) : a = b.
+Proof.
+  refine 
+    match e in @eq _ _ y return fin_lift (@eq _ a) y 
+    with 
+    | eq_refl => eq_refl 
+    end.
+Defined.
+
+Definition vec_lift_head {A : Type} {n : nat}  (P : A -> Prop) (a : Vector.t A n) : Prop :=
+  match a with 
+  | [] => False 
+  | u :: _ => P u 
+  end.
+
+Theorem vec_inv_head {n : nat} {A : Type} (a b : A) 
+  (u v : Vector.t A n) (e : a :: u = b :: v) : a = b.
+Proof.
+  refine
+    match e in (@eq _ _ y) return vec_lift_head (@eq _ a) y 
+    with 
+    | eq_refl => eq_refl
+    end.
+Defined.
+
+
+Definition vec_lift_tail {n : nat} {A : Type} (P : Vector.t A n -> Prop) 
+  (u : Vector.t A (S n)) : Prop :=
+  match u in Vector.t _ m return (Vector.t A (pred m) -> Prop) -> Prop 
+  with
+  | _ :: uy => fun P => P uy 
+  | _ => fun _ => False
+  end P.
+
+Theorem vec_inv_tail {n : nat} {A : Type} (a b : A) 
+  (u v : Vector.t A n) (e : a :: u = b :: v) : u = v.
+Proof.
+  refine
+    match e in _ = y return vec_lift_tail (@eq _ u) y 
+    with 
+    | eq_refl => eq_refl
+    end.
+Defined.
+
+
+
+
+End EQ.
