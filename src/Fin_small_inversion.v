@@ -3,7 +3,6 @@ https://gist.github.com/DmxLarchey/ee2ae2d134e467adadbb6a90befe6a41
 https://types22.inria.fr/files/2022/06/TYPES_2022_slides_25.pdf
 *)
 
-
 From Coq Require Import Utf8 Fin Vector.
 Import VectorNotations.
 
@@ -108,7 +107,8 @@ Section Fin.
     | Fs i => Fin_shape_S_nxt i
     end.
 
-  Lemma fin_ind : 
+
+  Lemma fin_inversion : 
     forall (n : nat) (P : Fin (S n) -> Type), 
     P Fz -> (forall (f : Fin n), P (Fs f)) ->
     forall fw : Fin (S n), P fw.
@@ -116,6 +116,22 @@ Section Fin.
     intros n P HP1 HP2 fw.
     now destruct (Fin_invert fw).
   Qed.
+
+  
+  Lemma fin_ind : 
+    forall (P : forall {n : nat}, Fin n -> Type), 
+    (forall {n : nat}, @P (S n) Fz) -> (forall {n : nat} (f : Fin n), P f -> P (Fs f)) ->
+    forall {n : nat} (fw : Fin n), P fw.
+  Proof.
+    intros P fa fb.
+    refine(
+      fix Fn {n : nat} (fw : Fin n) : P n fw :=
+      match fw with 
+      | @Fz nt => fa nt 
+      | @Fs nt i => fb nt i (Fn i)
+      end).
+  Defined.
+    
 
 End Fin.
 
@@ -135,13 +151,27 @@ Definition vect_invert {n : nat} {A : Type} (v : Vector.t A n) : vect_invert_t v
   | ua :: ub => vect_shape_S ua ub 
   end.
 
-Lemma vect_ind {A : Type} : 
+Lemma vect_inv {A : Type} : 
   forall (P : forall {n : nat}, Vector.t A n -> Type), 
   P [] -> (forall {n : nat} (a : A) (u : Vector.t A n), P (a :: u)) -> 
   forall {n : nat} (v : Vector.t A n) , P v.
 Proof.
-  intros * Ha Hb *.
+  intros * fa fb *.
   now destruct (vect_invert v).
 Defined.
 
+Lemma vect_ind {A : Type} : 
+  forall (P : forall {n : nat}, Vector.t A n -> Type), 
+  P [] -> (forall {n : nat} (a : A) (u : Vector.t A n), P u -> P (a :: u)) -> 
+  forall {n : nat} (v : Vector.t A n) , P v.
+Proof.
+  intros * fa fb.
+  refine(fix Fn {n : nat} (v : Vector.t A n) : P n v :=
+  match v with 
+  | [] => fa 
+  | va :: vb => fb _ va vb (Fn vb)  
+  end).
+Defined.
+  
 End Vect.
+
