@@ -180,26 +180,21 @@ Section Schulze.
         then (m c d -1)%Z
         else m c d).
 
-  Definition count_invert_t {bs : list ballot} {st : State} : Count bs st -> Prop.
+  Definition count_invert {bs : list ballot} {st : State} : Count bs st -> Prop.
   Proof.
     refine 
-      match st with 
-      | partial (us, inbs) m =>
-        match inbs with 
+    match st with 
+    | partial (us, inbs) m =>
+      match us as ush return us = ush -> _ with 
+      | [] => fun ha => 
+        match inbs with
         | [] => @count_shape_partial_0 bs us m 
-        | inbsh :: inbst => 
-          match us with 
-          | [] => _
-          | ush :: ust => _ 
-          end 
-        end 
-      | winners w => @count_shape_winner bs w
-      end.
-    + admit. 
+        | _ => fun _ => False
+        end  
+      | ush :: ust => fun ha => _ 
+      end eq_refl
+    | winners w => @count_shape_winner bs w
+    end.
     +
-      refine 
-        match ballot_valid_dec ush with 
-        | left ha => count_shape_partial_1
-        | right ha => count_shape_partial_2
-        end.
+      rewrite ha.
   Admitted.
