@@ -77,12 +77,6 @@ Section EQ.
 
 End EQ.
 
-(* inversion principal Vector *)
-Print Vector.t.
-(*
-Inductive t (A : Type) : nat → Type :=   nil : t A 0 | cons : A → ∀ n : nat, t A n → t A (S n).
-
-*)
 Section Fin. 
 
   Inductive Fin : nat -> Type :=
@@ -137,41 +131,139 @@ End Fin.
 
 Section Vect.
 
-Inductive vect_shape {A : Type} : forall {n : nat}, Vector.t A n -> Type :=
-| vect_shape_O : @vect_shape A 0 []
-| vect_shape_S {n : nat} (a : A) (v : Vector.t A n) : @vect_shape A (S n) (a :: v).
+  Inductive vect_shape {A : Type} : forall {n : nat}, Vector.t A n -> Type :=
+  | vect_shape_O : @vect_shape A 0 []
+  | vect_shape_S {n : nat} (a : A) (v : Vector.t A n) : @vect_shape A (S n) (a :: v).
 
 
-Let vect_invert_t {A : Type} {n : nat} : Vector.t A n -> Type := vect_shape.
+  Let vect_invert_t {A : Type} {n : nat} : Vector.t A n -> Type := vect_shape.
 
 
-Definition vect_invert {n : nat} {A : Type} (v : Vector.t A n) : vect_invert_t v :=
-  match v with 
-  | [] => vect_shape_O
-  | ua :: ub => vect_shape_S ua ub 
-  end.
+  Definition vect_invert {n : nat} {A : Type} (v : Vector.t A n) : vect_invert_t v :=
+    match v with 
+    | [] => vect_shape_O
+    | ua :: ub => vect_shape_S ua ub 
+    end.
 
-Lemma vect_inv {A : Type} : 
-  forall (P : forall {n : nat}, Vector.t A n -> Type), 
-  P [] -> (forall {n : nat} (a : A) (u : Vector.t A n), P (a :: u)) -> 
-  forall {n : nat} (v : Vector.t A n) , P v.
-Proof.
-  intros * fa fb *.
-  now destruct (vect_invert v).
-Defined.
+  Lemma vect_inv {A : Type} : 
+    forall (P : forall {n : nat}, Vector.t A n -> Type), 
+    P [] -> (forall {n : nat} (a : A) (u : Vector.t A n), P (a :: u)) -> 
+    forall {n : nat} (v : Vector.t A n) , P v.
+  Proof.
+    intros * fa fb *.
+    now destruct (vect_invert v).
+  Defined.
 
-Lemma vect_ind {A : Type} : 
-  forall (P : forall {n : nat}, Vector.t A n -> Type), 
-  P [] -> (forall {n : nat} (a : A) (u : Vector.t A n), P u -> P (a :: u)) -> 
-  forall {n : nat} (v : Vector.t A n) , P v.
-Proof.
-  intros * fa fb.
-  refine(fix Fn {n : nat} (v : Vector.t A n) : P n v :=
-  match v with 
-  | [] => fa 
-  | va :: vb => fb _ va vb (Fn vb)  
-  end).
-Defined.
+  Lemma vect_ind {A : Type} : 
+    forall (P : forall {n : nat}, Vector.t A n -> Type), 
+    P [] -> (forall {n : nat} (a : A) (u : Vector.t A n), P u -> P (a :: u)) -> 
+    forall {n : nat} (v : Vector.t A n) , P v.
+  Proof.
+    intros * fa fb.
+    refine(fix Fn {n : nat} (v : Vector.t A n) : P n v :=
+    match v with 
+    | [] => fa 
+    | va :: vb => fb _ va vb (Fn vb)  
+    end).
+  Defined.
   
 End Vect.
+
+
+
+Section Ev.
+
+  Inductive Even : nat -> Prop :=
+  | ev_O : Even 0 
+  | ev_S {n : nat} : Even n -> Even (2 + n).
+
+  (* 
+  Inductive even_shape_S  : forall {n : nat}, Even n -> Prop :=
+  | even_0 : even_shape_S ev_O
+  | even_S {n : nat} (i : Even n) : even_shape_S (ev_S i).
+  *)
+    
+  Inductive even_shape_0 : Even 0 -> Prop := 
+  | even_0 : even_shape_0 ev_O.
+  
+  Inductive even_shape_1 : Even 1 -> Prop  :=.
+    
+  Inductive even_shape_S : forall {n : nat}, Even (2 + n) -> Prop :=
+  | even_S {n : nat} (i : Even n) : even_shape_S (ev_S i).
+  
+  
+  Definition even_invert_t {n : nat} : Even n -> Prop := 
+    match n with 
+    | 0 => even_shape_0
+    | 1 => even_shape_1
+    | S (S n) => even_shape_S
+    end.
+  
+
+  (* 
+  Definition even_invert {n : nat} (e : Even n) : 
+    match n return Even n -> Prop 
+    with 
+    | 0 => even_shape_0 
+    | 1 => even_shape_1
+    | S (S n) => even_shape_S 
+    end e := 
+    match e with 
+    | ev_O => even_0
+    | ev_S i => even_S i 
+    end.
+  *)
+
+
+  Definition even_invert {n : nat} (e : Even n) : even_invert_t e := 
+    match e with 
+    | ev_O => even_0
+    | ev_S i => even_S i 
+    end.
+
+
+
+  Lemma Even_O_inv (e : Even 0) (P : Even 0 → Prop) :
+    P ev_O → P e.
+  Proof. now destruct (even_invert e). Qed.
+
+  Lemma Even_1_inv (e : Even 1) : False.
+  Proof. now destruct (even_invert e). Qed.
+
+      
+  Lemma Even_S_inv n (e : Even (2 + n)) (P : Even (2 + n) → Prop) :
+    (∀ u : Even n, P (ev_S u)) → P e.
+  Proof. now destruct (even_invert e). Qed.
+
+
+
+  (** Now with dependent pattern matching *)
+
+  Definition Even_inv_alt_t {n} : Even n → Prop :=
+    match n with
+    | 0       => λ e, ∀ (P : Even 0 → Prop), P ev_O → P e
+    | 1       => λ _, False
+    | S (S m) => λ e, ∀ (P : Even (2+m) → Prop), (∀ (u : Even m), P (ev_S u)) → P e
+    end.
+
+  Definition Even_inv_alt {n} (e : Even n) : Even_inv_alt_t e :=
+    match e with
+    | ev_O   => λ _ H, H
+    | ev_S i => λ _ H, H _
+    end.
+
+  (** Even 0, Even 1 and Even (2+_) inversions using an auxiliary
+    inductive predicate, as in "smaller inversions" *)
+
+  Definition Even_O_inv_alt (e : Even 0) :
+    ∀ (P : Even 0 → Prop), P ev_O → P e :=
+    Even_inv_alt e.
+
+  Definition Even_1_inv_alt (e : Even 1) : False :=
+    Even_inv_alt e.
+
+  Definition Even_S_inv_alt n (e : Even (2+n)) :
+    ∀P : Even (2+n) → Prop, (∀u, P (ev_S u)) → P e :=
+    Even_inv_alt e.
+End Ev.
 
