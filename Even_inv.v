@@ -72,6 +72,13 @@ Section Ev.
     now eapply Even_0_inv with (P := fun e => e = ev_0).
   Qed.
 
+  Theorem ev_ssss : forall (n : nat) (e : Even (2 + n)), ∃ (p : Even n), e = ev_2 p.
+  Proof.
+    intros *.
+    eapply (Even_2_inv n (fun (u : Even (2 + n)) => ∃ (p : Even n), u = ev_2 p) e).
+    intro u; exists u; exact eq_refl.
+  Qed.
+
 
 End Ev.
 
