@@ -74,3 +74,62 @@ Section Ev.
 
 
 End Ev.
+
+
+
+Section Ex.
+
+  Print exist.
+  (* Inductive sig (A : Type) (P : A → Prop) : Type :=   exist : ∀ x : A, P x → {x : A | P x}. *)
+
+  
+  Inductive sig_shape {A : Type} {P : A -> Prop} : @sig A P -> Prop := 
+  | sigs (x : A) (pf : P x) : sig_shape (exist P x pf).
+
+  Definition sig_inv_t {A : Type} {P : A -> Prop} : @sig A P -> Prop :=
+    fun p => @sig_shape A P p.
+
+  Definition sig_inv {A : Type} {P : A -> Prop} (e : @sig A P) : sig_inv_t e :=
+  match e with 
+  | exist _ x pf => sigs x pf 
+  end.
+
+
+  Theorem sig_inv_P : forall (A : Type) (P : A -> Prop) (Psig : @sig A P -> Prop)
+    (e : @sig A P), (forall (x : A) (pf : P x), Psig (exist P x pf)) -> Psig e.
+  Proof.
+    intros * Ha.
+    now destruct (sig_inv e).
+  Defined.
+
+
+  Definition exist_lift_value {A P} (Q : A -> Prop) (e : @sig A P) : Prop :=
+    match e return (A -> Prop) -> Prop with 
+    | exist _ x _ => fun P => P x 
+    end Q.
+  
+  Definition exist_inj {A : Type} {P : A -> Prop} (u v : A) (pfu : P u) (pfv : P v) 
+    (e : exist _ u pfu = exist _ v pfv) : u = v := 
+    match e in _ = y return exist_lift_value (eq u) y  
+    with 
+    | eq_refl => eq_refl
+    end.
+
+  Definition exist_inj_proof_lift {A P} (Q : forall a, P a -> Prop) (e : @sig A P) : Prop :=
+  match e return (forall (a : A), P a -> Prop) -> Prop with 
+  | exist _ x pf => fun P => P x pf 
+  end Q.
+  
+  (* 
+  Definition exist_inj_proof {A : Type} {P : A -> Prop} (Hdec : forall x y : A, {x = y} + {x <> y}) 
+    (u v : A) (pfu : P u) (pfv : P v) 
+    (e : exist _ u pfu = exist _ v pfv) (pf : u = v) : 
+    pfu = eq_rect v P pfv u (eq_sym pf) := 
+    match e in _ = y return exist_inj_proof_lift (JMeq pfu) y 
+    with 
+    | eq_refl => eq_refl
+    end. 
+   *)
+
+End Ex.
+
