@@ -57,4 +57,17 @@ Section Wf.
   Qed.
 
 
+
+
+  Theorem well_founded_ind {A : Type} (P : A -> Prop) : forall (f : A -> nat),
+    (forall (a : A), (forall (b : A), f b < f a -> P b) -> P a) -> forall (a : A), P a.
+  Proof.
+    intros f Ha a.
+    apply (well_founded_ind (wf_inverse_image _ _ lt f lt_wf)).
+    intros * Hb.
+    refine (Ha x (fun (b : A) (Hc : f b < f x) => Hb _ Hc )).
+  Qed.
+
+
+
 End Wf. 
