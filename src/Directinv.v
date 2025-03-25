@@ -118,6 +118,22 @@ Section Inv.
      end.
   Defined.
 
+
+  Definition exist_inj_ret {A : Type} {P : A -> Prop} (u v : A) 
+    (pfu : P u) (pfv : P v) (e : exist _ u pfu = exist _ v pfv) : u = v.
+  Proof.
+    pose(ret := fun (y : @sig _ P) =>
+      match y as y' in @sig _ _ return A -> Prop 
+      with 
+      | exist _ u pfu => fun i => i = u 
+      end).
+    refine 
+      match e as e' in _ = y return ret y u 
+      with 
+      | eq_refl => eq_refl
+      end.
+  Defined.
+
 End Inv.
 
 
@@ -153,7 +169,3 @@ Section Vect.
   Defined.
 
 End Vect.
-
-
-  
-
