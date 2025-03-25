@@ -8,14 +8,28 @@ Section Inv.
   Proof.
     refine
       match e in _ = y return 
-        (match y return Prop 
+        (match y return A -> Prop 
         with 
-        | Some y' => a = y' 
-        | None => True
-        end)
+        | Some y' => fun i => i = y' 
+        | None => fun _ => True
+        end a)
       with 
       | eq_refl => eq_refl
       end.
+  Defined.
+
+  Theorem option_inv_ret {A : Type} (a b : A) (e : Some a = Some b) : a = b.
+  Proof.
+    refine(
+      let ret := fun (y : option A) (a : A) => 
+        match y return A -> Prop
+        with 
+        | Some v => fun i => i = v
+        | None => fun _ => False
+        end a in 
+      match e as e' in _ = y return ret y a with 
+      | eq_refl => eq_refl
+      end).
   Defined.
 
   Theorem fin_inv {n : nat} (a b : Fin.t n) (e : FS a = FS b) : a = b.
@@ -63,3 +77,41 @@ Section Inv.
   Defined.
 
 End Inv.
+
+
+
+Section Vect.
+
+  Inductive p {A : Type} : ∀ (n : nat), Vector.t A n -> Prop :=
+  | pnil : p 0 []
+  | pcons (n : nat) (h : A) (v : Vector.t A n) : p n v -> p (1 + n) (h :: v).
+  
+  
+  Theorem pcons_inv {A : Type} : ∀ (n : nat) (h : A) (t : Vector.t A n), 
+    p (1 + n) (h :: t) -> p n t.
+  Proof.
+    refine(
+      fun n h t ha => 
+      let ret := fun (n0 : nat) => 
+        match n0 as n0' return ∀ (t0 : Vector.t A n0'), p n0' t0  -> Prop 
+        with 
+        | 0 => fun (t0 : Vector.t A 0) (eb : p 0 t0) => True
+        | S n0' => fun (t0 : Vector.t A (S n0')) => 
+          match t0 as t0' in Vector.t _ n1 return p n1 t0' -> Prop 
+          with 
+          | [] => fun (ea : p 0 []) => False
+          | ha :: ta => fun (ea : p _ (ha :: ta)) => p _ ta 
+          end
+        end in 
+      match ha as ha' in p n' t' return ret n' t' ha' 
+      with 
+      | pnil => I 
+      | pcons n' h' v' ha => ha
+      end).
+  Defined.
+
+End Vect.
+
+
+  
+
