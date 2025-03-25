@@ -20,16 +20,16 @@ Section Inv.
 
   Theorem option_inv_ret {A : Type} (a b : A) (e : Some a = Some b) : a = b.
   Proof.
-    refine(
-      let ret := fun (y : option A) (a : A) => 
+    pose(ret := fun (y : option A) (a : A) => 
         match y return A -> Prop
         with 
         | Some v => fun i => i = v
         | None => fun _ => False
-        end a in 
+        end a). 
+    refine 
       match e as e' in _ = y return ret y a with 
       | eq_refl => eq_refl
-      end).
+      end.
   Defined.
 
   Theorem fin_inv {n : nat} (a b : Fin.t n) (e : FS a = FS b) : a = b.
@@ -90,9 +90,8 @@ Section Vect.
   Theorem pcons_inv {A : Type} : ∀ (n : nat) (h : A) (t : Vector.t A n), 
     p (1 + n) (h :: t) -> p n t.
   Proof.
-    refine(
-      fun n h t ha => 
-      let ret := fun (n0 : nat) => 
+    intros n h t ha.
+    pose(ret := fun (n0 : nat) => 
         match n0 as n0' return ∀ (t0 : Vector.t A n0'), p n0' t0  -> Prop 
         with 
         | 0 => fun (t0 : Vector.t A 0) (eb : p 0 t0) => True
@@ -102,16 +101,13 @@ Section Vect.
           | [] => fun (ea : p 0 []) => False
           | ha :: ta => fun (ea : p _ (ha :: ta)) => p _ ta 
           end
-        end in 
+        end).  
+    refine 
       match ha as ha' in p n' t' return ret n' t' ha' 
       with 
       | pnil => I 
       | pcons n' h' v' ha => ha
-      end).
+      end.
   Defined.
 
 End Vect.
-
-
-  
-
