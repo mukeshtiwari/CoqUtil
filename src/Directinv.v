@@ -51,8 +51,8 @@ Section Inv.
     pose (ret := fun (n : nat)  =>
       match n as n' return Fin.t n' -> Fin.t (pred n') -> Prop 
       with 
-      | 0 => fun (y : Fin.t _) (a : Fin.t (pred 0)) => True 
-      | S n' => fun (y : Fin.t _) => 
+      | 0 => fun (y : Fin.t 0) (a : Fin.t (pred 0)) => True 
+      | S n' => fun (y : Fin.t (S n')) => 
         match y as y' in Fin.t m return Fin.t (pred m) -> Prop 
         with 
         | FS i => fun a => a = i 
@@ -65,6 +65,8 @@ Section Inv.
       | eq_refl => eq_refl
       end.
   Defined.
+
+
   
   Theorem vec_inv_tail {n : nat} {A : Type} (a b : A) 
     (u v : Vector.t A n) (e : a :: u = b :: v) : u = v.
@@ -79,6 +81,27 @@ Section Inv.
       with 
       | eq_refl => eq_refl 
       end.
+  Defined.
+
+  Theorem vec_inv_tail_ret {n : nat} {A : Type} (a b : A) 
+    (u v : Vector.t A n) (e : a :: u = b :: v) : u = v.
+  Proof.
+    pose(ret := fun (n : nat) => 
+    match n as n' return Vector.t _ n' -> Vector.t _ (pred n') -> Prop 
+    with 
+    | 0 => fun (y : Vector.t A 0) (u : Vector.t A (pred 0)) => True 
+    | S n' => fun (y : Vector.t A (S n')) =>
+      match y as y' in Vector.t _ m return Vector.t _ (pred m) -> Prop 
+      with 
+      | [] => fun a => True 
+      | h :: t => fun a => a = t 
+      end
+    end).
+    refine 
+      match e in _ = y return ret (S n) y u
+      with 
+      | eq_refl => eq_refl
+      end. 
   Defined.
 
 
@@ -130,3 +153,7 @@ Section Vect.
   Defined.
 
 End Vect.
+
+
+  
+
