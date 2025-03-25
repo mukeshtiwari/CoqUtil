@@ -46,6 +46,25 @@ Section Inv.
       end.
   Defined.
   
+  Theorem fin_inv_ret {n : nat} (a b : Fin.t n) (e : FS a = FS b) : a = b.
+  Proof.
+    pose (ret := fun (n : nat)  =>
+      match n as n' return Fin.t n' -> Fin.t (pred n') -> Prop 
+      with 
+      | 0 => fun (y : Fin.t _) (a : Fin.t (pred 0)) => True 
+      | S n' => fun (y : Fin.t _) => 
+        match y as y' in Fin.t m return Fin.t (pred m) -> Prop 
+        with 
+        | FS i => fun a => a = i 
+        | F1 => fun _ => True 
+        end
+      end).
+    refine 
+      match e in _ = y return ret _ y a 
+      with 
+      | eq_refl => eq_refl
+      end.
+  Defined.
   
   Theorem vec_inv_tail {n : nat} {A : Type} (a b : A) 
     (u v : Vector.t A n) (e : a :: u = b :: v) : u = v.
