@@ -168,20 +168,49 @@ Section Vect.
       end.
   Defined.
 
+  Theorem vector_inv {A : Type} : ∀ (n : nat) (v : Vector.t A n), 
+    match v as v' in Vector.t _ m return Vector.t _ m -> Prop 
+    with
+    | [] => fun u => u = []
+    | h :: t => fun u => u = h :: t 
+    end v.
+  Proof.
+    destruct v; exact eq_refl.
+  Defined.
+
+  
 
   Theorem vector_rect {A : Type} : ∀ (P : ∀ (n : nat), Vector.t A n -> Type),
     P 0 [] -> (∀ (n : nat) (h : A) (v : Vector.t A n), P n v -> P (S n) (h :: v)) ->
     ∀ (n : nat) (v : Vector.t A n), P n v.
   Proof.
     intros * ha hb.
-    refine(fix fn (n : nat) (v : Vector.t A n) : P n v :=
-      match v as v' in Vector.t _ n0 return P n0 v' 
+    pose(ret := fun (Q : ∀ (n : nat), Vector.t A n -> Type) (n : nat) =>
+      match n as n0 return Vector.t _ n0 -> Type with 
+      | 0 => fun (v : Vector.t A 0) => 
+        match v as v' in Vector.t _ m return Type 
+        with
+        | [] => Q 0 []
+        | _ => False 
+        end 
+      | S n' => fun (v : Vector.t A (S n')) =>
+        match v as v' in Vector.t _ m return Type 
+        with 
+        | [] => False 
+        | h :: t => Q _ (h :: t)
+        end 
+      end).
+    (* There is nothing much gain from the previous maneuver *)
+    refine(fix fn (n : nat) (v : Vector.t A n) :  P n v :=
+      match v as v' in Vector.t _ n0 return P n0 v'  
       with 
       | []  => ha 
       | h :: t => hb _ h t (fn _ t)
       end).
   Defined.
   
+  
+
   Theorem vector_rect_type {A : Type} : ∀ (P : ∀ (n : nat), Vector.t A n -> Type),
     P 0 [] -> (∀ (n : nat) (h : A) (v : Vector.t A n), P n v -> P (S n) (h :: v)) ->
     ∀ (n : nat) (v : Vector.t A n), P n v.
@@ -191,7 +220,7 @@ Section Vect.
       (fix fn (n : nat) {struct n} : ∀ (v : Vector.t A n), P n v := 
         match n as n0 return ∀ (v0 : Vector.t A n0), P n0 v0 
         with 
-        | 0 => fun (v : Vector.t _ 0) => 
+        | 0 => fun (v : Vector.t _ 0) =>  
           match v as v' in Vector.t _ m return 
             (match m as m' return Type with 
             | 0 => P m v'
@@ -200,7 +229,7 @@ Section Vect.
           with
           | [] => ha 
           | _ => I  
-          end
+          end 
         | S n' => fun (v : Vector.t _ (S n')) =>
           match v as v' in Vector.t _ m return m = S n' -> 
             (match m return Type with 
@@ -213,10 +242,9 @@ Section Vect.
           end eq_refl 
         end).
         inversion hc as [hd]; clear hc.
-        subst. 
+        subst.  
         exact (hb _ h t (fn _ t)).
   Defined.
-
 
 
 End Vect.
