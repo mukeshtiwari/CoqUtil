@@ -91,110 +91,21 @@ Section Schulze.
       (forall c, w c = false <-> (exists x, d c = inr x)) ->
       Count bs (winners w).
 
-  
 
-  Inductive count_shape_partial_0 
-    {bs us m} : Count bs (partial (us, []) m)  -> Prop :=
-  | ax_S pa pb  : count_shape_partial_0 (ax bs us m pb pa).
-
-  Inductive count_shape_partial_1 
-    {bs us inbs nm} : Count bs (partial (us, inbs) nm) -> Prop := 
-  | cvalid_S u m (e : Count bs (partial (u :: us, inbs) m))
-    (pa : (∀ c : cand, (u c > 0)%nat)) 
-    (pb : (∀ c d : cand,
-      ((u c < u d)%nat → nm c d = m c d + 1)
-    ∧ (u c = u d → nm c d = m c d)
-    ∧ ((u c > u d)%nat → nm c d = m c d - 1))) : 
-    count_shape_partial_1 (cvalid bs u us m nm inbs e pa pb).
-
-  Inductive count_shape_partial_2 
-    {bs us u inbs m} : Count bs (partial (us, u :: inbs) m) -> Prop := 
-  | cinvalid_S (e : Count bs (partial (u :: us, inbs) m)) 
-    (pa : (∃ c : cand, u c = 0%nat)) : 
-    count_shape_partial_2 (cinvalid bs u us m inbs e pa).
-
-  Inductive count_shape_winner 
-    {bs w} :  Count bs (winners w) -> Prop :=
-  | fin_S m inbs (d : (forall c, (wins_type c) + (loses_type c))) 
-    (e : Count bs (partial ([], inbs) m)) 
-    (pa : (forall c, w c = true  <-> (exists x, d c = inl x)))
-    (pb : (forall c, w c = false <-> (exists x, d c = inr x))) :
-    count_shape_winner (fin bs m inbs w d e pa pb).
-
-  Local Open Scope nat_scope.
-
-  Definition forall_exists_fin_dec : forall (A : Type) (l : list A) (f : A -> nat),
-    {forall x, In x l -> f x > 0} + {exists x, In x l /\ f x = 0} := 
-    fun (A : Type) =>
-      fix F l f {struct l} :=
-      match l with
-      | [] => left (fun (x : A) (H : In x []) => match H with end)
-      | h :: t =>
-        match Nat.eq_dec (f h) 0 with
-        | left e =>
-          right (ex_intro _  h (conj (in_eq h t) e))
-        | right n =>
-          match F t f with
-          | left Fl =>
-            left (fun x H =>
-                    match H with
-                    | or_introl H1 =>
-                      match zerop (f x) with
-                      | left e =>
-                        False_ind (f x > 0) ((eq_ind h (fun v : A => f v <> 0) n x H1) e)
-                      | right r => r
-                      end
-                    | or_intror H2 => Fl x H2
-                    end)
-          | right Fr =>
-            right
-              match Fr with
-              | ex_intro _ x (conj Frl Frr) =>
-                ex_intro _ x (conj (in_cons h x t Frl) Frr)
-              end
-          end
-        end
-      end.
-
-    Definition ballot_valid_dec : forall b : ballot, 
-      {forall c, b c > 0} + {exists c, b c = 0} :=
-      fun b => let H := forall_exists_fin_dec cand cand_all in
-        match H b with
-        | left Lforall =>
-          left (fun c : cand => Lforall c (cand_fin c))
-        | right Lexists => 
-            right
-              match Lexists with
-              | ex_intro _ x (conj _ L) =>
-                ex_intro (fun c : cand => b c = 0) x L
-              end
-        end.
-
-  Local Open Scope Z_scope.
-  Definition update_marg (p : ballot) (m : cand -> cand -> Z) : cand -> cand -> Z :=
-    fun c d => 
-      if (Nat.ltb (p c) (p d))%nat
-      then (m c d + 1)%Z
-      else 
-        (if (Nat.ltb (p d) (p c))%nat
-        then (m c d -1)%Z
-        else m c d).
-
-  Definition count_invert {bs : list ballot} {st : State} : Count bs st -> Prop.
+  Theorem count_inv : ∀ (bs : list ballot) (s : State) (e : Count bs s), 
+    match e as e' in Count _ s' return Count _ s' -> Type 
+    with 
+    | ax _ us m ha hb => fun (b : Count bs (partial (us, []) m)) => 
+      b = ax _ us m ha hb 
+    | cvalid _ u us m nm inbs ha hb hc => fun (b : Count bs (partial (us, inbs) nm)) => 
+      b = cvalid _ u us m nm inbs ha hb hc
+    | cinvalid _ u us m inbs ha hb => fun (b : Count bs (partial (us, u :: inbs) m)) => 
+      b = cinvalid _ u us m inbs ha hb 
+    | fin _ m inbs w d ha hb hc => fun (b : Count bs (winners w)) => 
+      b = fin _ m inbs w d ha hb hc
+    end e.
   Proof.
-    refine 
-    match st with 
-    | partial (us, inbs) m =>
-      match us as ush return us = ush -> _ with 
-      | [] => fun ha => 
-        match inbs with
-        | [] => @count_shape_partial_0 bs us m 
-        | _ => fun _ => False
-        end  
-      | ush :: ust => fun ha => _ 
-      end eq_refl
-    | winners w => @count_shape_winner bs w
-    end.
-    +
-      rewrite ha.
-  Admitted.
+    destruct e; exact eq_refl.
+  Defined.
+
+End Schulze. 
