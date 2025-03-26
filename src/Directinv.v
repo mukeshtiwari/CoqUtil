@@ -128,7 +128,7 @@ Section Inv.
       | exist _ u pfu => fun i => i = u 
       end).
     refine 
-      match e as e' in _ = y return ret y u 
+      match e as e' in _ = y return ret y u
       with 
       | eq_refl => eq_refl
       end.
@@ -167,5 +167,56 @@ Section Vect.
       | pcons n' h' v' ha => ha
       end.
   Defined.
+
+
+  Theorem vector_rect {A : Type} : ∀ (P : ∀ (n : nat), Vector.t A n -> Type),
+    P 0 [] -> (∀ (n : nat) (h : A) (v : Vector.t A n), P n v -> P (S n) (h :: v)) ->
+    ∀ (n : nat) (v : Vector.t A n), P n v.
+  Proof.
+    intros * ha hb.
+    refine(fix fn (n : nat) (v : Vector.t A n) : P n v :=
+      match v as v' in Vector.t _ n0 return P n0 v' 
+      with 
+      | []  => ha 
+      | h :: t => hb _ h t (fn _ t)
+      end).
+  Defined.
+  
+  Theorem vector_rect_type {A : Type} : ∀ (P : ∀ (n : nat), Vector.t A n -> Type),
+    P 0 [] -> (∀ (n : nat) (h : A) (v : Vector.t A n), P n v -> P (S n) (h :: v)) ->
+    ∀ (n : nat) (v : Vector.t A n), P n v.
+  Proof.
+    intros * ha hb.
+    refine 
+      (fix fn (n : nat) {struct n} : ∀ (v : Vector.t A n), P n v := 
+        match n as n0 return ∀ (v0 : Vector.t A n0), P n0 v0 
+        with 
+        | 0 => fun (v : Vector.t _ 0) => 
+          match v as v' in Vector.t _ m return 
+            (match m as m' return Type with 
+            | 0 => P m v'
+            | _ => True 
+            end)
+          with
+          | [] => ha 
+          | _ => I  
+          end
+        | S n' => fun (v : Vector.t _ (S n')) =>
+          match v as v' in Vector.t _ m return m = S n' -> 
+            (match m return Type with 
+            | 0 => True
+            | _ => P m v' 
+            end)
+          with 
+          | [] => fun _ => I 
+          | Vector.cons _ h n0 t => fun hc => _
+          end eq_refl 
+        end).
+        inversion hc as [hd]; clear hc.
+        subst. 
+        exact (hb _ h t (fn _ t)).
+  Defined.
+
+
 
 End Vect.
