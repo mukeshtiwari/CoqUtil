@@ -118,9 +118,10 @@ Section Schulze.
       | partial (us, vx) m => 
         match vx as vx' return (Count _ (partial (us, vx') m) -> Prop) with 
         | [] => fun (c : (Count _ (partial (us, []) m))) => 
-          (∃ (ha : us = bs)  (hb : ∀ c d : cand, m c d = 0),  c = ax _ us m ha hb) ∨
-          (∃ u nm ha hb hc, c = cvalid _ u us nm m [] ha hb hc)
-        | _ => fun _ => IDProp
+          (∃ (hu : us = bs)  (hv : ∀ c d : cand, m c d = 0),  
+            c = ax _ us m hu hv) ∨
+          (∃ u m' hu hv hw, c = cvalid _ u us m' m [] hu hv hw)
+        | vxh :: vxt => fun _ => IDProp
         end
       | winners _ => fun _ => IDProp 
       end.
@@ -130,22 +131,51 @@ Section Schulze.
   Theorem count_inv_ax : ∀ (bs us : list ballot) (m : cand -> cand -> Z) 
     (e : Count bs (partial (us , []) m)), 
     (∃ (ha : us = bs)  (hb : ∀ c d : cand, m c d = 0),  e = ax _ us m ha hb) ∨
-    (∃ u nm ha hb hc, e = cvalid _ u us nm m [] ha hb hc).
+    (∃ u m' ha hb hc, e = cvalid _ u us m' m [] ha hb hc).
   Proof.
     intros *.
     refine 
       match e as e' in Count _ s' return count_inv_ax_ret_type s' e' with
-      | ax _ us m ha hb => _ 
-      | cvalid _ u _ _ nm inbs ha hb hc => _
+      | ax _ us' m' ha hb => _ 
+      | cvalid _ u us' m' nm inbs ha hb hc => _
       | _ => _
       end; cbn; try (exact idProp).
     +
-      left; repeat eexists; 
-      exact eq_refl.
+      left; repeat eexists.
     +
-      destruct inbs as [| h t]; cbn. 
+      destruct inbs as [| h t].
       right; repeat eexists.
       exact idProp.
   Defined.
-    
+
+
+  Theorem count_inv_fin_ret_type {bs : list ballot} (s : state) :
+    Count bs s -> Prop.
+  Proof.
+    refine 
+      match s as s' return Count _ s' -> Prop 
+      with 
+      | partial (us, vx) m => fun _ =>  IDProp
+      | winners f => fun c => 
+        ∃ m inbs d ha hb hc, c = fin _ m inbs f d ha hb hc
+      end.
+  Defined.
+
+
+  Theorem count_inv_fin : ∀ (bs : list ballot) (f : cand -> bool) 
+    (e : Count bs (winners f)), 
+    ∃ m inbs d ha hb hc, e = fin _ m inbs f d ha hb hc.
+  Proof.
+    intros *.
+    refine 
+      match e as e' in Count _ s'  
+        return count_inv_fin_ret_type s' e'  
+      with 
+      | fin _ m' inbs' f' d' ha' hb' hc' => _
+      | _ => idProp
+      end.
+    repeat eexists.
+  Defined.
+
+
 End Schulze.  
