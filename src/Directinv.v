@@ -248,3 +248,21 @@ Section Vect.
 
 
 End Vect.
+
+
+Theorem nat_inv : ∀ (n m : nat), 
+  S n = S m -> n = m.
+Proof. 
+  intros * ha.
+  pose (ret := fun (y : nat) =>
+    match y as y' return nat -> Prop 
+    with 
+    | 0 => fun _ => IDProp
+    | S y' => fun n => n = y'
+    end).
+  refine 
+    match ha in _ = y return ret y n 
+    with 
+    | eq_refl => eq_refl
+    end.
+Defined.
