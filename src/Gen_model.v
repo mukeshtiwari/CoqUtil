@@ -86,3 +86,32 @@ Next Obligation.
   +
     simpl. exact eq_refl.
 Defined.
+
+(* another proof by generalisation *)
+Program Definition unrestricted_state (t : @state restricted_Model) : state :=
+  {|
+    state_fun w :=
+      match s w with
+      | true => t (exist _ w _)
+      | false => false
+      end
+  |}.
+Next Obligation.
+  intros w1 w2 H1.
+  unfold unrestricted_state_obligation_1.
+  pose proof (state_proper s w1 w2 H1) as Hproper.
+  generalize (eq_refl (s w1)) as ha.
+  generalize (s w1) at 1 3.
+  destruct b; intros; simpl.
+  generalize (eq_refl (s w2)) as hb.
+  generalize (s w2) at 1 3.
+  destruct b; intros.
+  eapply state_proper; simpl.
+  exact H1.
+  congruence.
+  generalize (eq_refl (s w2)) as hb.
+  generalize (s w2) at 1 3.
+  destruct b; intros.
+  congruence.
+  reflexivity.
+Qed.
