@@ -101,17 +101,12 @@ Next Obligation.
   unfold unrestricted_state_obligation_1.
   pose proof (state_proper s w1 w2 H1) as Hproper.
   generalize (eq_refl (s w1)) as ha.
-  generalize (s w1) at 1 3.
-  destruct b; intros; simpl.
+  generalize (s w1) at 1 3 as u.
   generalize (eq_refl (s w2)) as hb.
-  generalize (s w2) at 1 3.
-  destruct b; intros.
-  eapply state_proper; simpl.
-  exact H1.
-  congruence.
-  generalize (eq_refl (s w2)) as hb.
-  generalize (s w2) at 1 3.
-  destruct b; intros.
-  congruence.
-  reflexivity.
+  generalize (s w2) at 1 3 as v.
+  intros.
+  destruct u, v; try congruence.
+  +
+    eapply state_proper; simpl.
+    exact H1.
 Qed.
