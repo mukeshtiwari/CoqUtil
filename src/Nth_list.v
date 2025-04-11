@@ -40,6 +40,22 @@ Proof.
       nia.
 Qed.
 
+(* Proof using generalisation *)
+Lemma nth_safe_nth: forall
+  {A : Type} (l : list A) (n : nat) d
+  (Ha : (n < length l)), nth_safe l n Ha = nth n l d.  
+Proof.
+  intros *; unfold nth_safe.
+  generalize (eq_refl (nth_error l n)) as ha.
+  generalize (nth_error l n) at 1 3 as u.
+  destruct u; intros.
+  +
+    eapply eq_sym, nth_error_nth; auto.
+  +
+    pose proof (proj1(nth_error_None l n) (eq_sym ha)).
+    nia.
+Qed.
+
 (* using refine *)
 
 (*
