@@ -97,16 +97,15 @@ Program Definition unrestricted_state (t : @state restricted_Model) : state :=
       end
   |}.
 Next Obligation.
-  intros w1 w2 H1.
-  unfold unrestricted_state_obligation_1.
-  pose proof (state_proper s w1 w2 H1) as Hproper.
-  generalize (eq_refl (s w1)) as ha.
+  intros w1 w2 ha.
+  pose proof (state_proper s w1 w2 ha) as Hproper.
+  generalize (eq_refl (s w1)) as hb.
   generalize (s w1) at 1 3 as u.
-  generalize (eq_refl (s w2)) as hb.
+  generalize (eq_refl (s w2)) as hc.
   generalize (s w2) at 1 3 as v.
-  intros.
+  intros *.
   destruct u, v; try congruence.
   +
-    eapply state_proper; simpl.
-    exact H1.
+    eapply state_proper; cbn.
+    exact ha.
 Qed.
