@@ -86,3 +86,93 @@ Proof.
       +++
         congruence.
 Qed.
+
+
+
+            
+From Stdlib Require Import NArith
+Strings.Byte Psatz.
+Open Scope N_scope.
+
+Module Complicated.
+
+ 
+
+  Definition np_total (np : N):  (np <? 256 = true) ->  byte.
+  Proof.
+    intros H.
+    refine(match (np <? 256) as b return ∀ mp, np = mp ->
+        (mp <? 256) = b -> _ with
+    | true => fun mp Hmp Hmpt =>
+        match of_N mp as npt return _ = npt -> _ with
+        | Some x => fun _ => x
+        | None => fun Hf => _
+        end eq_refl
+    | false => fun mp Hmp Hmf => _
+    end np eq_refl eq_refl).
+    abstract(
+    apply of_N_None_iff in Hf;
+    apply N.ltb_lt in Hmpt; nia).
+    abstract (subst; congruence).
+  Defined.
+
+
+
+  Lemma np_true : forall np (ha : np <? 256 = true) x,
+    of_N np = Some x -> np_total np ha = x.
+  Proof.
+    intros * hb; unfold np_total.
+    generalize (eq_refl (np <? 256)) as hc. 
+    (* If I write generalize  (np <? 256) at 1 3 as u, 
+    I get an error.  *)
+    generalize (np <? 256) at 2 3 as u.
+    intros *. 
+    destruct u; [|congruence].
+    generalize (eq_refl (of_N np)) as u.
+    generalize (of_N np) at 2 3 as v.
+    intros *.
+    destruct v; [|congruence].
+    rewrite hb in u; 
+    inversion u; subst; auto.
+  Qed.
+
+  Definition np_total_n (np : N):  (true = (np <? 256)) ->  byte.
+  Proof.
+    intros H.
+    refine(match (np <? 256) as b return ∀ mp, np = mp ->
+        b = (mp <? 256) -> _ with
+    | true => fun mp Hmp Hmpt =>
+        match of_N mp as npt return _ = npt -> _ with
+        | Some x => fun _ => x
+        | None => fun Hf => _
+        end eq_refl
+    | false => fun mp Hmp Hmf => _
+    end np eq_refl eq_refl).
+    apply eq_sym in H, Hmpt.
+    abstract(
+    apply of_N_None_iff in Hf;
+    apply N.ltb_lt in Hmpt; nia).
+    abstract (subst; congruence).
+  Defined.
+
+  Lemma np_truet : forall np (ha : true = (np <? 256)) x,
+    of_N np = Some x -> np_total_n np ha = x.
+  Proof.
+    intros * hb.
+    unfold np_total_n.
+    generalize (eq_refl (np <? 256)) as u.
+    generalize (np <? 256) at 1 3 as v.
+    destruct v; [| congruence].
+    intros.
+    generalize (eq_refl (of_N np)) as v.
+    generalize (of_N np) at 2 3 as o.
+    destruct o; [|congruence].
+    intros hc.
+    rewrite hb in hc;
+    inversion hc; reflexivity.
+  Qed.
+
+
+
+End Complicated.
+
