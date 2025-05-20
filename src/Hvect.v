@@ -80,8 +80,7 @@ Section Hvect.
                       Fin.t (Nat.pred n'') -> Vector.t Type n'' -> Type
                 with
                 | 0 => fun _ _ => IDProp
-                | S m' => fun (ea : Fin.t m') (v : Vector.t Type (S m')) =>
-                           v[@FS ea]
+                | S m' => fun (ea : Fin.t m') (v : Vector.t Type (S m')) => v[@FS ea]
                 end (eq_rec_r (λ np : nat, t (Nat.pred np))
                        (f : t (Nat.pred (S nf))) pf) v')
          with
@@ -91,7 +90,7 @@ Section Hvect.
       eapply fn.
       exact hvt.
   Defined.
-
+  
   Eval compute in hvect_nth (FS F1) (Hcons true (Hcons 1 Hnil)).
 
 End Hvect.
