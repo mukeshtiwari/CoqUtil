@@ -17,12 +17,12 @@ Section Hvect.
     intros n f.
     refine
       match f as fp in Fin.t n' return
-            (match n' as n'' return Fin.t n'' -> Type
-             with
-             | 0 => fun (e : Fin.t 0) => IDProp
-             | S m' => fun (e : Fin.t (S m')) =>
-                         ((e = F1) + {f' : Fin.t m' | e = FS f'})%type
-             end fp)
+        (match n' as n'' return Fin.t n'' -> Type
+          with
+          | 0 => fun (e : Fin.t 0) => IDProp
+          | S m' => fun (e : Fin.t (S m')) =>
+            ((e = F1) + {f' : Fin.t m' | e = FS f'})%type
+          end fp)
       with
       | Fin.F1 => inl eq_refl
       | Fin.FS f' => inr (exist _ f' eq_refl)
@@ -30,28 +30,27 @@ Section Hvect.
   Defined.
 
   
-  Definition hvect_nth_fin {n : nat}  
-    {v : Vector.t Type n} (u : Hvect n v) : ∀ (f : Fin.t n), Vector.nth v f.
+  Definition hvect_nth_fin {n : nat} {v : Vector.t Type n} 
+    (u : Hvect n v) : ∀ (f : Fin.t n), Vector.nth v f.
   Proof.
     generalize dependent n.
-    refine(fix fn (n : nat) (v : Vector.t Type n) (hv : Hvect n v) {struct hv} :
-            forall (f : Fin.t n), v[@f] :=
-             match hv in Hvect n' v' return forall (f : Fin.t n'), v'[@f] with
-             | Hnil => fun f => match f with end 
-             | @Hcons _ n' _ hvh hvt => fun (f : Fin.t (S n')) => _ 
-                                                                     
-             end).
+    refine(fix fn (n : nat) (v : Vector.t Type n) 
+      (hv : Hvect n v) {struct hv} : forall (f : Fin.t n), v[@f] :=
+      match hv in Hvect n' v' return forall (f : Fin.t n'), v'[@f] 
+      with
+      | Hnil => fun f => match f with end 
+      | @Hcons _ n' _ hvh hvt => fun (f : Fin.t (S n')) => _ 
+      end).
     destruct (fin_inv _ f) as [ha | (f' & ha)]; subst; cbn;
-      [exact hvh | eapply fn; exact hvt].
-    Show Proof.
+    [exact hvh | eapply fn; exact hvt].
   Defined.
 
   
   Eval compute in hvect_nth_fin (Hcons true (Hcons 1 Hnil)) (FS F1).
 
   
-  Definition hvect_nth {n : nat}  
-    (f : Fin.t n) {v : Vector.t Type n} (u : Hvect n v) : Vector.nth v f.
+  Definition hvect_nth {n : nat} (f : Fin.t n) 
+    {v : Vector.t Type n} (u : Hvect n v) : Vector.nth v f.
   Proof.
     generalize dependent n.
     refine(fix fn {n : nat} (f : Fin.t n) {struct f} : 
@@ -65,24 +64,24 @@ Section Hvect.
     +     
       refine 
         (match hv in Hvect n' v' return
-              (match n' as n'' return Vector.t Type n'' -> Type
-               with
-               | 0 => fun _ => IDProp
-               | S m' => fun (e : Vector.t Type (S m')) => e[@F1]
-               end v')    
+          (match n' as n'' return Vector.t Type n'' -> Type
+            with
+            | 0 => fun _ => IDProp
+            | S m' => fun (e : Vector.t Type (S m')) => e[@F1]
+            end v')    
         with 
         | Hcons hvh hvt => hvh
         end).
     + 
       refine
         (match hv in Hvect n' v' return forall (pf : n' = S nf), 
-               (match n' as n'' return
-                      Fin.t (Nat.pred n'') -> Vector.t Type n'' -> Type
-                with
-                | 0 => fun _ _ => IDProp
-                | S m' => fun (ea : Fin.t m') (v : Vector.t Type (S m')) => v[@FS ea]
-                end (eq_rec_r (λ np : nat, t (Nat.pred np))
-                       (f : t (Nat.pred (S nf))) pf) v')
+          (match n' as n'' return
+                Fin.t (Nat.pred n'') -> Vector.t Type n'' -> Type
+          with
+          | 0 => fun _ _ => IDProp
+          | S m' => fun (ea : Fin.t m') (v : Vector.t Type (S m')) => v[@FS ea]
+          end (eq_rec_r (λ np : nat, t (Nat.pred np))
+              (f : t (Nat.pred (S nf))) pf) v')
          with
          | Hnil => fun _ => idProp
          | Hcons hvh hvt => fun pf => _ 
