@@ -36,13 +36,12 @@ Section Hvect.
     generalize dependent n.
     refine(fix fn (n : nat) (v : Vector.t Type n) (hv : Hvect n v) {struct hv} :
             forall (f : Fin.t n), v[@f] :=
-             match hv with
+             match hv in Hvect n' v' return forall (f : Fin.t n'), v'[@f] with
              | Hnil => fun f => match f with end 
              | @Hcons _ n' _ hvh hvt => fun (f : Fin.t (S n')) => _ 
              end).
     destruct (fin_inv _ f) as [ha | (f' & ha)]; subst; cbn;
       [exact hvh | eapply fn; exact hvt].
-    Show Proof.
   Defined.
 
   
