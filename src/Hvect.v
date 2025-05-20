@@ -59,8 +59,8 @@ Section Hvect.
       match f as f' in Fin.t n' return ∀ (v : Vector.t Type n'), 
         Hvect n' v → v[@f']
       with 
-      | Fin.F1 => fun v hv => _ 
-      | Fin.FS f => fun v hv => _ 
+      | @Fin.F1 nf => fun v hv => _ 
+      | @Fin.FS nf f => fun v hv => _ 
       end).
     +     
       refine 
@@ -75,7 +75,7 @@ Section Hvect.
         end).
     + 
       refine
-        (match hv in Hvect n' v' return forall (pf : n' = S n0), 
+        (match hv in Hvect n' v' return forall (pf : n' = S nf), 
                (match n' as n'' return
                       Fin.t (Nat.pred n'') -> Vector.t Type n'' -> Type
                 with
@@ -83,7 +83,7 @@ Section Hvect.
                 | S m' => fun (ea : Fin.t m') (v : Vector.t Type (S m')) =>
                            v[@FS ea]
                 end (eq_rec_r (λ np : nat, t (Nat.pred np))
-                       (f : t (Nat.pred (S n0))) pf) v')
+                       (f : t (Nat.pred (S nf))) pf) v')
          with
          | Hnil => fun _ => idProp
          | Hcons hvh hvt => fun pf => _ 
@@ -92,5 +92,6 @@ Section Hvect.
       exact hvt.
   Defined.
 
+  Eval compute in hvect_nth (FS F1) (Hcons true (Hcons 1 Hnil)).
 
 End Hvect.
