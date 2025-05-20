@@ -11,7 +11,7 @@ Section Hvect.
   Check (Hcons true (Hcons 1 Hnil)).
   Check (Hcons nat (Hcons bool Hnil)).
 
-  Definition fin_inv : forall (n : nat) (f : Fin.t (S n)),
+  Definition fin_inv : ∀ (n : nat) (f : Fin.t (S n)),
       (f = Fin.F1) + {f' | f = Fin.FS f'}.
   Proof.
     intros n f.
@@ -31,7 +31,7 @@ Section Hvect.
 
   
   Definition hvect_nth_fin {n : nat}  
-    {v : Vector.t Type n} (u : Hvect n v) : forall (f : Fin.t n), Vector.nth v f.
+    {v : Vector.t Type n} (u : Hvect n v) : ∀ (f : Fin.t n), Vector.nth v f.
   Proof.
     generalize dependent n.
     refine(fix fn (n : nat) (v : Vector.t Type n) (hv : Hvect n v) {struct hv} :
@@ -89,8 +89,13 @@ Section Hvect.
          end eq_refl); cbn.
       eapply fn.
       exact hvt.
-  Defined.
+  Defined.  
   
   Eval compute in hvect_nth (FS F1) (Hcons true (Hcons 1 Hnil)).
 
 End Hvect.
+
+From Stdlib Require Import Extraction.
+Extraction Language OCaml.
+Extraction hvect_nth.
+Extraction hvect_nth_fin.
