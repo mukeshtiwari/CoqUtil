@@ -92,9 +92,72 @@ Section Hvect.
   
   Eval compute in hvect_nth (FS F1) (Hcons true (Hcons 1 Hnil)).
 
+  
+  Definition hvect_map {n : nat} {va vb : Vector.t Type n} (hv : Hvect n va)
+   (f : ∀ (i : Fin.t n), Vector.nth va i -> Vector.nth vb i) : Hvect n vb.
+  Proof.
+    generalize dependent n.
+    refine(fix fn n va vb hv {struct hv} : 
+      (∀ i : Fin.t n, va[@i] → vb[@i]) → Hvect n vb := 
+      match hv as hv' in Hvect n' va' return ∀ (pf : n = n'), 
+        (∀ i : Fin.t n', va'[@i] → vb[@(eq_rec_r _ i pf)]) → 
+        Hvect n' (@eq_rect _ n _ vb n' pf)
+      with 
+      | Hnil => _
+      | Hcons hvh hvt => _ 
+      end eq_refl).
+    +
+      intros * ha. 
+      generalize dependent va.
+      generalize dependent vb.
+      rewrite pf; cbn.
+      intros * ha * hv.
+      refine 
+        match vb as vb' in Vector.t _ n' return 
+          (match n' as np return Vector.t _ np -> Type 
+          with 
+          | 0 => fun e => Hvect 0 e
+          | _ => fun _ => IDProp
+          end vb')
+        with 
+        | [] => Hnil
+        end.
+    +
+      intros * ha.
+      generalize dependent va.
+      generalize dependent vb.
+      rewrite pf; cbn.
+      intro vb.
+      intros * ha * hv.
+      revert ha.
+      refine
+        (match vb as vb' in Vector.t _ n' return ∀ (pfa : S n0 = n'),
+          ((∀ i : Fin.t n', 
+            match i in (Fin.t m')
+            return (Vector.t Type (Nat.pred m') → Type)
+            with
+            | @F1 n1 => λ _ : Vector.t Type n1, T
+            | @FS n1 p' => λ v' : Vector.t Type n1, v'[@p']
+            end (@eq_rect _ (S n0) (fun np => Vector.t Type (Nat.pred np)) 
+              t n' pfa) → vb'[@i]) → Hvect n' vb')
+        with 
+        | [] => fun pfa ha => match pfa with end
+        | vbh :: vbt => fun pfa ha => _   
+        end eq_refl); inversion pfa; subst.
+        refine (Hcons (ha Fin.F1 hvh) _).
+        eapply fn; [exact hvt | ].
+        intros i hi.
+        assert (hc : pfa = eq_refl) by 
+        (apply Eqdep_dec.UIP_refl_nat).
+        subst; cbn in ha.
+        exact (ha (Fin.FS i) hi).
+  Defined.  
+
+
 End Hvect.
 
 From Stdlib Require Import Extraction.
 Extraction Language OCaml.
 Extraction hvect_nth.
 Extraction hvect_nth_fin.
+Recursive Extraction hvect_map.
