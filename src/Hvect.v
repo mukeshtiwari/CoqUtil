@@ -119,10 +119,11 @@ Section Hvect.
           with 
           | 0 => fun e => (∀ i : t 0, False_rect Type (case0 (λ _ : t 0, False) i) → 
             e[@i]) →  Hvect 0 e
-          | S m' => fun e => IDProp
+          | S m' => fun _ => IDProp
           end vb')
         with 
-        | [] => fun ea => Hnil
+        | [] => fun ea => Hnil 
+        | _ => idProp
         end.
     +
       intros * ha.
@@ -134,22 +135,22 @@ Section Hvect.
       revert ha.
       refine
         (match vb as vb' in Vector.t _ nw return ∀ (pfa : S n0 = nw),
-          (match nw as np return ∀ (pfb : nw = np), 
-            Vector.t _ np -> Type 
+          (match nw as np return ∀ (pfb : nw = np), Vector.t _ np -> Type 
           with 
-          | 0 => fun pfb e => IDProp 
-          | S n'' => fun pfb e => ((∀ i : Fin.t (S n''), 
-            match i in (Fin.t m')
-            return (Vector.t Type (Nat.pred m') → Type)
-            with
-            | @F1 n1 => fun _ =>  T
-            | @FS n1 p' => fun (v' : Vector.t Type n1) => v'[@p']
-            end (@eq_rect _ (S n0) (fun nt => Vector.t Type (Nat.pred nt)) t (S n'') 
-                (eq_trans pfa pfb)) → e[@i]) → Hvect (S n'') e)
+          | 0 => fun (pfb : nw = 0) (e : Vector.t Type 0) => IDProp
+          | S n'' => fun (pfb : nw = S n'') (e : Vector.t Type (S n'')) => 
+            ((∀ i : Fin.t (S n''), 
+              match i in (Fin.t m')
+              return (Vector.t Type (Nat.pred m') → Type)
+              with
+              | @F1 n1 => fun _ => T
+              | @FS n1 p' => fun (v' : Vector.t Type n1) => v'[@p']
+              end (@eq_rect _ (S n0) (fun nt => Vector.t Type (Nat.pred nt)) t (S n'') 
+                  (eq_trans pfa pfb)) → e[@i]) → Hvect (S n'') e)
           end eq_refl vb')
         with 
         | [] => fun _ => idProp
-        | vbh :: vbt => fun pfa ha => _   
+        | vbh :: vbt => fun pfa ha => _
         end eq_refl); inversion pfa; subst.
         refine (Hcons (ha Fin.F1 hvh) _).
         eapply fn; [exact hvt | ].
