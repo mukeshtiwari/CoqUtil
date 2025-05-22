@@ -112,15 +112,17 @@ Section Hvect.
       generalize dependent vb.
       rewrite pf; cbn.
       intros * ha * hv.
+      revert ha.
       refine 
         match vb as vb' in Vector.t _ n' return 
           (match n' as np return Vector.t _ np -> Type 
           with 
-          | 0 => fun e => Hvect 0 e
-          | _ => fun _ => IDProp
+          | 0 => fun e => (∀ i : t 0, False_rect Type (case0 (λ _ : t 0, False) i) → 
+            e[@i]) →  Hvect 0 e
+          | S m' => fun e => IDProp
           end vb')
         with 
-        | [] => Hnil
+        | [] => fun ea => Hnil
         end.
     +
       intros * ha.
@@ -131,17 +133,22 @@ Section Hvect.
       intros * ha * hv.
       revert ha.
       refine
-        (match vb as vb' in Vector.t _ n' return ∀ (pfa : S n0 = n'),
-          ((∀ i : Fin.t n', 
+        (match vb as vb' in Vector.t _ nw return ∀ (pfa : S n0 = nw),
+          (match nw as np return ∀ (pfb : nw = np), 
+            Vector.t _ np -> Type 
+          with 
+          | 0 => fun pfb e => IDProp 
+          | S n'' => fun pfb e => ((∀ i : Fin.t (S n''), 
             match i in (Fin.t m')
             return (Vector.t Type (Nat.pred m') → Type)
             with
-            | @F1 n1 => λ _ : Vector.t Type n1, T
-            | @FS n1 p' => λ v' : Vector.t Type n1, v'[@p']
-            end (@eq_rect _ (S n0) (fun np => Vector.t Type (Nat.pred np)) 
-              t n' pfa) → vb'[@i]) → Hvect n' vb')
+            | @F1 n1 => fun _ =>  T
+            | @FS n1 p' => fun (v' : Vector.t Type n1) => v'[@p']
+            end (@eq_rect _ (S n0) (fun nt => Vector.t Type (Nat.pred nt)) t (S n'') 
+                (eq_trans pfa pfb)) → e[@i]) → Hvect (S n'') e)
+          end eq_refl vb')
         with 
-        | [] => fun pfa ha => match pfa with end
+        | [] => fun _ => idProp
         | vbh :: vbt => fun pfa ha => _   
         end eq_refl); inversion pfa; subst.
         refine (Hcons (ha Fin.F1 hvh) _).
@@ -151,7 +158,7 @@ Section Hvect.
         (apply Eqdep_dec.UIP_refl_nat).
         subst; cbn in ha.
         exact (ha (Fin.FS i) hi).
-  Defined.  
+  Defined.
 
 
 End Hvect.
