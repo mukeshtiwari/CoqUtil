@@ -10,6 +10,7 @@ Section Hvect.
     
   Check (Hcons true (Hcons 1 Hnil)).
   Check (Hcons nat (Hcons bool Hnil)).
+  
 
   Definition fin_inv : ∀ (n : nat) (f : Fin.t (S n)),
       (f = Fin.F1) + {f' | f = Fin.FS f'}.
@@ -29,7 +30,7 @@ Section Hvect.
       end.
   Defined.
 
-  
+
   Definition hvect_nth_fin {n : nat} {v : Vector.t Type n} 
     (u : Hvect n v) : ∀ (f : Fin.t n), Vector.nth v f.
   Proof.
@@ -75,8 +76,8 @@ Section Hvect.
     + 
       refine
         (match hv in Hvect n' v' return forall (pf : n' = S nf), 
-          (match n' as n'' return
-                Fin.t (Nat.pred n'') -> Vector.t Type n'' -> Type
+          (match n' as n'' return Fin.t (Nat.pred n'') -> 
+            Vector.t Type n'' -> Type
           with
           | 0 => fun _ _ => IDProp
           | S m' => fun (ea : Fin.t m') (v : Vector.t Type (S m')) => v[@FS ea]
@@ -91,7 +92,6 @@ Section Hvect.
   Defined.  
   
   Eval compute in hvect_nth (FS F1) (Hcons true (Hcons 1 Hnil)).
-
   
   Definition hvect_map {n : nat} {va vb : Vector.t Type n} (hv : Hvect n va)
    (f : ∀ (i : Fin.t n), Vector.nth va i -> Vector.nth vb i) : Hvect n vb.
@@ -117,8 +117,8 @@ Section Hvect.
         match vb as vb' in Vector.t _ n' return 
           (match n' as np return Vector.t _ np -> Type 
           with 
-          | 0 => fun e => (∀ i : t 0, False_rect Type (case0 (λ _ : t 0, False) i) → 
-            e[@i]) →  Hvect 0 e
+          | 0 => fun e => (∀ i : t 0, False_rect Type 
+            (case0 (fun _ : t 0 =>  False) i) →  e[@i]) →  Hvect 0 e
           | S m' => fun _ => IDProp
           end vb')
         with 
@@ -145,8 +145,8 @@ Section Hvect.
               with
               | @F1 n1 => fun _ => T
               | @FS n1 p' => fun (v' : Vector.t Type n1) => v'[@p']
-              end (@eq_rect _ (S n0) (fun nt => Vector.t Type (Nat.pred nt)) t (S n'') 
-                  (eq_trans pfa pfb)) → e[@i]) → Hvect (S n'') e)
+              end (@eq_rect _ (S n0) (fun nt => Vector.t Type (Nat.pred nt)) 
+                t (S n'') (eq_trans pfa pfb)) → e[@i]) → Hvect (S n'') e)
           end eq_refl vb')
         with 
         | [] => fun _ => idProp
@@ -161,11 +161,32 @@ Section Hvect.
         exact (ha (Fin.FS i) hi).
   Defined.
 
-
 End Hvect.
 
-From Stdlib Require Import Extraction.
-Extraction Language OCaml.
-Extraction hvect_nth.
-Extraction hvect_nth_fin.
-Recursive Extraction hvect_map.
+
+Section Test.
+
+  Arguments Vector.cons {_} & _ _ _.
+  Definition va : Vector.t Type 3 := [nat; bool; nat].
+  Definition vb : Vector.t Type 3 := [bool; nat; bool].
+  Definition hva := Hcons 11 (Hcons true (Hcons 10 Hnil)).
+  Definition f : nat -> bool := fun x => if Nat.leb x 10 then true else false.
+  Definition g : bool -> nat := fun x => if x then 0 else 1.
+  Definition h : nat -> bool := fun _ => true.
+
+  Definition fn : ∀ (i : Fin.t 3), Vector.nth va i -> Vector.nth vb i.
+  Proof.
+    intro fin.
+    unfold va, vb.
+    destruct (fin_inv _ fin) as [ha | (f' & ha)]. subst; cbn.
+    exact f.
+    destruct (fin_inv _ f') as [hb | (f'' & hb)]. subst; cbn.
+    exact g.
+    destruct (fin_inv _ f'') as [hc | (f''' & hc)]. subst; cbn.
+    exact h.
+    refine match f''' with end.
+  Defined.
+
+  Eval compute in @hvect_map _ va vb hva fn.
+
+End Test.
