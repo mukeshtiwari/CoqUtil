@@ -170,23 +170,19 @@ Section Test.
   Definition va : Vector.t Type 3 := [nat; bool; nat].
   Definition vb : Vector.t Type 3 := [bool; nat; bool].
   Definition hva := Hcons 11 (Hcons true (Hcons 10 Hnil)).
-  Definition f : nat -> bool := fun x => if Nat.leb x 10 then true else false.
-  Definition g : bool -> nat := fun x => if x then 0 else 1.
-  Definition h : nat -> bool := fun _ => true.
-
+  
   Definition fn : ∀ (i : Fin.t 3), Vector.nth va i -> Vector.nth vb i.
   Proof.
     intro fin.
     unfold va, vb.
     destruct (fin_inv _ fin) as [ha | (f' & ha)]. subst; cbn.
-    exact f.
+    exact (fun x => if Nat.leb x 10 then true else false).
     destruct (fin_inv _ f') as [hb | (f'' & hb)]. subst; cbn.
-    exact g.
+    exact (fun x => if x then 0 else 1).
     destruct (fin_inv _ f'') as [hc | (f''' & hc)]. subst; cbn.
-    exact h.
+    exact (fun _ => true).
     refine match f''' with end.
   Defined.
-
+           
   Eval compute in @hvect_map _ va vb hva fn.
-
 End Test.
