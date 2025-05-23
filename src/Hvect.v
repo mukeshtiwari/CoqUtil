@@ -161,6 +161,44 @@ Section Hvect.
         exact (ha (Fin.FS i) hi).
   Defined.
 
+
+  
+  Definition hvect_filter {n : nat} {va : Vector.t Type n} (hv : Hvect n va)
+   (f : ∀ (i : Fin.t n), Vector.nth va i -> bool) : 
+   {m : nat & {vb : Vector.t Type m & Hvect m vb}}.
+  Proof.
+    generalize dependent n.
+    refine(fix fn (n : nat) (va : Vector.t Type n) (hv : Hvect n va) {struct hv} : 
+      (∀ i : t n, va[@i] -> bool) -> {m : nat & {vb : Vector.t Type m & Hvect m vb}} := 
+      match hv as hv' in Hvect n' va' return ∀ (pf : n = n'),
+        ((∀ i : Fin.t n', va'[@i] -> bool) -> 
+          {m : nat & {vb : Vector.t Type m & Hvect m vb}})
+      with 
+      | Hnil => fun ha fi => existT _ 0 (existT _ [] Hnil)
+      | Hcons hvh hvt => fun ha fi => 
+        match fi F1 hvh as fii return fi F1 hvh = fii -> 
+        {m : nat & {vb : Vector.t Type m & Hvect m vb}}
+        with 
+        | true => fun hb => _  
+        | false => fun hb => _ 
+        end eq_refl
+      end eq_refl).
+    +
+      (* True case *)
+      assert (hc : (∀ i : Fin.t n0, t[@i] → bool)).
+      intros i hi.
+      exact (fi (Fin.FS i) hi).
+      destruct (fn _ t hvt hc) as (m & vb & hv').
+      exists (S m), (T :: vb).
+      exact (Hcons hvh hv').
+    + 
+      (* false case *)
+      assert (hc : (∀ i : Fin.t n0, t[@i] → bool)).
+      intros i hi.
+      exact (fi (Fin.FS i) hi).
+      exact (fn _ t hvt hc).
+  Defined.
+   
 End Hvect.
 
 
@@ -169,7 +207,7 @@ Section Test.
   Arguments Vector.cons {_} & _ _ _.
   Definition va : Vector.t Type 3 := [nat; bool; nat].
   Definition vb : Vector.t Type 3 := [bool; nat; bool].
-  Definition hva := Hcons 11 (Hcons true (Hcons 10 Hnil)).
+  Definition hva := Hcons 9 (Hcons true (Hcons 10 Hnil)).
   
   Definition fn : ∀ (i : Fin.t 3), Vector.nth va i -> Vector.nth vb i.
   Proof.
@@ -180,9 +218,14 @@ Section Test.
     destruct (fin_inv _ f') as [hb | (f'' & hb)]. subst; cbn.
     exact (fun x => if x then 0 else 1).
     destruct (fin_inv _ f'') as [hc | (f''' & hc)]. subst; cbn.
-    exact (fun _ => true).
+    exact (fun x => if Nat.leb 11 x then true else false).
     refine match f''' with end.
   Defined.
-           
+
   Eval compute in @hvect_map _ va vb hva fn.
+
 End Test.
+
+Require Import Extraction.
+Set Extraction OCaml.
+Recursive Extraction hvect_filter.
