@@ -31,6 +31,75 @@ Section Hvect.
   Defined.
 
 
+  Definition hvect_head {n : nat} {v : Vector.t Type (S n)} 
+    (hu : Hvect (S n) v) : 
+    match v as v' in Vector.t _ n' return 
+      (match n' as np return Vector.t _ np -> Type 
+      with
+      | 0 => fun e => IDProp  
+      | S n'' => fun (e : Vector.t Type (S n'')) => Type 
+      end v') 
+    with 
+    | vh :: vt => vh 
+    end.
+  Proof.
+    refine 
+      match hu as hu' in Hvect np e return 
+        (match np as np' return Vector.t _ np' -> Type 
+        with
+        | 0 => fun e => IDProp 
+        | S np' => fun (v : Vector.t Type (S np')) => 
+             match v as v' in Vector.t _ n' return 
+              (match n' as np return Vector.t _ np -> Type 
+              with
+              | 0 => fun e => IDProp  
+              | S n'' => fun (e : Vector.t Type (S n'')) => Type 
+              end v') 
+            with 
+            | [] => idProp
+            | vh :: _ => vh 
+            end 
+        end e)
+      with 
+      | Hcons hut hvt  => hut 
+      end.
+  Defined. 
+
+
+  Definition hvect_tail {n : nat} {v : Vector.t Type (S n)} 
+    (hu : Hvect (S n) v) : Hvect n 
+    (match v as v' in Vector.t _ n' return 
+      (match n' as np return Vector.t _ np -> Type 
+      with
+      | 0 => fun e => IDProp  
+      | S n'' => fun (e : Vector.t Type (S n'')) => Vector.t Type n''
+      end v') 
+    with 
+    | vh :: vt => vt
+    end).
+  Proof.
+   refine 
+    (match hu as hu' in Hvect n' e return 
+      (match n' as n'' return Vector.t Type n'' -> Type 
+      with
+      | 0 => fun _ => IDProp
+      | S n'' => fun (v : Vector.t Type (S n'')) => 
+        Hvect n'' (match v as v' in Vector.t _ n' return 
+          (match n' as np return Vector.t _ np -> Type 
+          with
+          | 0 => fun e => IDProp  
+          | S n'' => fun (e : Vector.t Type (S n'')) => Vector.t Type n''
+          end v') 
+        with 
+        | vh :: vt => vt
+        end)
+      end e)
+    with 
+    | Hcons hu hv => hv 
+    end).
+  Defined.
+
+
   Definition hvect_nth_fin {n : nat} {v : Vector.t Type n} 
     (u : Hvect n v) : ∀ (f : Fin.t n), Vector.nth v f.
   Proof.
@@ -263,6 +332,8 @@ Section Test.
     exact (fun x y z u => x + y + z + u).
   Defined.
   Eval compute in @hvect_fold 3 vc nat hvc f 0.
+  Eval compute in @hvect_head _ vc hvc.
+  Eval compute in hvect_tail hvc.
 
 End Test.
 
