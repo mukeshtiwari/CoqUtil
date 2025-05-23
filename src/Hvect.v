@@ -200,7 +200,7 @@ Section Hvect.
   Defined.
 
   
-  Definition construct_fn_type {n : nat} (va : Vector.t Type n) (Acc : Type) : Type.
+  Definition fn_type {n : nat} (va : Vector.t Type n) (Acc : Type) : Type.
   Proof.
     revert Acc.
     generalize dependent n.
@@ -214,13 +214,13 @@ Section Hvect.
 
   
   Definition hvect_fold {n : nat} {va : Vector.t Type n} {Acc : Type}
-    (hv : Hvect n va) : construct_fn_type va Acc -> Acc -> Acc.
+    (hv : Hvect n va) : fn_type va Acc -> Acc -> Acc.
   Proof.
     generalize dependent n.
     refine(fix fn (n : nat) (va : Vector.t Type n) 
-      (hv : Hvect n va) {struct hv}: construct_fn_type va Acc -> Acc -> Acc := 
+      (hv : Hvect n va) {struct hv}: fn_type va Acc -> Acc -> Acc := 
       match hv in Hvect n' va' return 
-        construct_fn_type va' Acc -> Acc -> Acc 
+        fn_type va' Acc -> Acc -> Acc 
       with 
       | Hnil => fun f => f 
       | Hcons hvh hvt => fun fc => _  
@@ -253,11 +253,11 @@ Section Test.
   Defined.
 
   Eval compute in @hvect_map _ va vb hva fn.
-  Eval compute in construct_fn_type [nat; bool; nat] nat.
-  Eval compute in construct_fn_type va nat.
+  Eval compute in fn_type [nat; bool; nat] nat.
+  Eval compute in fn_type va nat.
   Definition vc : Vector.t Type 3 := [nat; nat; nat].
   Definition hvc : Hvect 3 vc := Hcons 4 (Hcons 5 (Hcons 6 Hnil)).
-  Definition f : construct_fn_type vc nat. 
+  Definition f : fn_type vc nat. 
   Proof.
     cbn. 
     exact (fun x y z u => x + y + z + u).
