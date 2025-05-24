@@ -297,6 +297,51 @@ Section Hvect.
       exact (fn _ t hvt (fc hvh)).
   Defined.
 
+ 
+  Definition hvect_zip : ∀ {n : nat} {va : Vector.t Type n},
+    Hvect n va -> ∀ {vb : Vector.t Type n}, Hvect n vb -> 
+    Hvect n (Vector.map2 prod va vb).
+  Proof.
+     refine(fix fn (n : nat) (va : Vector.t Type n)
+      (hva : Hvect n va) {struct hva} : ∀ (vb : Vector.t Type n), 
+      Hvect n vb -> Hvect n (Vector.map2 prod va vb) :=
+      match hva as hva' in Hvect n' va' return 
+        ∀ (vb : Vector.t Type n'), Hvect n' vb -> Hvect n' (Vector.map2 prod va' vb)
+      with 
+      | Hnil => fun vb hvb => _ 
+      | Hcons hvah hvat => fun vb hvb => _ 
+      end).
+    +
+      refine 
+        (match hvb as hvb' in Hvect n' vb' return 
+          (match n' as n'' return Vector.t _ n'' -> Type
+          with 
+            | 0 => fun (e : Vector.t Type 0) => Hvect 0 (map2 prod [] e)
+            | S n'' => fun _ =>  IDProp
+            end vb')
+        with 
+        | Hnil => Hnil
+        end).
+    +
+      refine
+        (match hvb as hvb' in Hvect n' vb' return ∀ (pf : S n0 = n'),
+          (match n' as n'' return Vector.t _ (Nat.pred n'') -> Vector.t _ n'' -> Type
+          with 
+            | 0 => fun _ _ => IDProp 
+            | S n'' => fun (et : Vector.t Type n'') (eb : Vector.t Type (S n'')) =>  
+                Hvect (S n'') (map2 prod (T :: et) eb)
+            end (@eq_rect _ (S n0) (fun np => Vector.t Type (Nat.pred np)) 
+              t n' pf) vb')
+        with 
+        | Hnil => fun _ => idProp
+        | Hcons hvbh hvbt => fun pf => _  
+        end eq_refl);
+        inversion pf as [ha]; subst. 
+        assert (hb : pf = eq_refl) by 
+        (apply Eqdep_dec.UIP_refl_nat).
+        subst; cbn.
+        refine(Hcons (hvah, hvbh) (fn _ _ hvat _ hvbt)).
+  Defined.  
    
 End Hvect.
 
@@ -334,9 +379,11 @@ Section Test.
   Eval compute in @hvect_fold 3 vc nat hvc f 0.
   Eval compute in @hvect_head _ vc hvc.
   Eval compute in hvect_tail hvc.
+  Eval compute in hvect_zip hva hvc.
 
 End Test.
 
 Require Import Extraction.
 Extraction Language OCaml.
 Recursive Extraction hvect_filter.
+Extraction hvect_zip.
