@@ -369,7 +369,7 @@ Section Test.
     cbn. 
     exact (fun x y z u => x + y + z + u).
   Defined.
-  Eval compute in @hvect_fold 3 vc nat hvc f 0.
+  Eval compute in @hvect_fold 3 vc hvc nat f 0.
   Eval compute in @hvect_head _ vc hvc.
   Eval compute in hvect_tail hvc.
   Eval compute in hvect_zip hva hvc.
