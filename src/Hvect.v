@@ -100,10 +100,9 @@ Section Hvect.
   Defined.
 
 
-  Definition hvect_nth_fin {n : nat} {v : Vector.t Type n} 
-    (u : Hvect n v) : ∀ (f : Fin.t n), Vector.nth v f.
+  Definition hvect_nth_fin : ∀ {n : nat} {v : Vector.t Type n}, Hvect n v ->
+    ∀ (f : Fin.t n), Vector.nth v f.
   Proof.
-    generalize dependent n.
     refine(fix fn (n : nat) (v : Vector.t Type n) 
       (hv : Hvect n v) {struct hv} : forall (f : Fin.t n), v[@f] :=
       match hv in Hvect n' v' return forall (f : Fin.t n'), v'[@f] 
@@ -119,10 +118,9 @@ Section Hvect.
   Eval compute in hvect_nth_fin (Hcons true (Hcons 1 Hnil)) (FS F1).
 
   
-  Definition hvect_nth {n : nat} (f : Fin.t n) 
-    {v : Vector.t Type n} (u : Hvect n v) : Vector.nth v f.
+  Definition hvect_nth : ∀ {n : nat} (f : Fin.t n) 
+    {v : Vector.t Type n}, Hvect n v -> Vector.nth v f.
   Proof.
-    generalize dependent n.
     refine(fix fn {n : nat} (f : Fin.t n) {struct f} : 
       ∀ (v : Vector.t Type n), Hvect n v → v[@f] := 
       match f as f' in Fin.t n' return ∀ (v : Vector.t Type n'), 
@@ -162,10 +160,9 @@ Section Hvect.
   
   Eval compute in hvect_nth (FS F1) (Hcons true (Hcons 1 Hnil)).
   
-  Definition hvect_map {n : nat} {va vb : Vector.t Type n} (hv : Hvect n va)
-   (f : ∀ (i : Fin.t n), Vector.nth va i -> Vector.nth vb i) : Hvect n vb.
+  Definition hvect_map : ∀  {n : nat} {va vb : Vector.t Type n}, Hvect n va ->
+   (∀ (i : Fin.t n), Vector.nth va i -> Vector.nth vb i) -> Hvect n vb.
   Proof.
-    generalize dependent n.
     refine(fix fn n va vb hv {struct hv} : 
       (∀ i : Fin.t n, va[@i] → vb[@i]) → Hvect n vb := 
       match hv as hv' in Hvect n' va' return ∀ (pf : n = n'), 
@@ -232,11 +229,10 @@ Section Hvect.
 
 
   
-  Definition hvect_filter {n : nat} {va : Vector.t Type n} (hv : Hvect n va)
-   (f : ∀ (i : Fin.t n), Vector.nth va i -> bool) : 
+  Definition hvect_filter : ∀ {n : nat} {va : Vector.t Type n}, Hvect n va ->
+   (∀ (i : Fin.t n), Vector.nth va i -> bool) ->
    {m : nat & {vb : Vector.t Type m & Hvect m vb}}.
   Proof.
-    generalize dependent n.
     refine(fix fn (n : nat) (va : Vector.t Type n) (hv : Hvect n va) {struct hv} : 
       (∀ i : t n, va[@i] -> bool) -> {m : nat & {vb : Vector.t Type m & Hvect m vb}} := 
       match hv as hv' in Hvect n' va' return ∀ (pf : n = n'),
@@ -269,10 +265,8 @@ Section Hvect.
   Defined.
 
   
-  Definition fn_type {n : nat} (va : Vector.t Type n) (Acc : Type) : Type.
+  Definition fn_type : ∀ {n : nat}, Vector.t Type n -> forall (Acc : Type), Type.
   Proof.
-    revert Acc.
-    generalize dependent n.
     refine(fix fn (n : nat) (va : Vector.t Type n) acc : Type := 
       match va as va' in Vector.t _ n' 
       with 
@@ -282,19 +276,18 @@ Section Hvect.
   Defined.
 
   
-  Definition hvect_fold {n : nat} {va : Vector.t Type n} {Acc : Type}
-    (hv : Hvect n va) : fn_type va Acc -> Acc -> Acc.
+  Definition hvect_fold : ∀ {n : nat} {va : Vector.t Type n}, 
+    Hvect n va -> ∀ {Acc : Type}, fn_type va Acc -> Acc -> Acc.
   Proof.
-    generalize dependent n.
     refine(fix fn (n : nat) (va : Vector.t Type n) 
-      (hv : Hvect n va) {struct hv}: fn_type va Acc -> Acc -> Acc := 
+      (hv : Hvect n va) {struct hv} : ∀ (Acc : Type), 
+        fn_type va Acc -> Acc -> Acc := 
       match hv in Hvect n' va' return 
-        fn_type va' Acc -> Acc -> Acc 
+        ∀ (Acc : Type), fn_type va' Acc -> Acc -> Acc 
       with 
-      | Hnil => fun f => f 
-      | Hcons hvh hvt => fun fc => _  
+      | Hnil => fun _ f => f 
+      | Hcons hvh hvt => fun Acc fc => fn _ _ hvt _ (fc hvh) 
       end).
-      exact (fn _ t hvt (fc hvh)).
   Defined.
 
  
