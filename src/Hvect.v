@@ -327,14 +327,25 @@ Section Hvect.
               t n' pf) vb')
         with 
         | Hnil => fun _ => idProp
-        | Hcons hvbh hvbt => fun pf => _  
+        | Hcons hvbh hvbt => fun pf => _ 
         end eq_refl);
-        inversion pf as [ha]; subst. 
+        inversion pf as [ha]; subst.  
         assert (hb : pf = eq_refl) by 
         (apply Eqdep_dec.UIP_refl_nat).
         subst; cbn.
         refine(Hcons (hvah, hvbh) (fn _ _ hvat _ hvbt)).
-  Defined.  
+  Defined.
+
+  Fixpoint hvect_app {n m : nat} {va : Vector.t Type n} {vb : Vector.t Type m}
+    (hva : Hvect n va) (hvb : Hvect m vb) : 
+    Hvect (n + m) (Vector.append va vb) :=
+    match hva as hv' in Hvect n' v' 
+      return Hvect (n' + m) (Vector.append v' vb) 
+    with
+    | Hnil => hvb
+    | Hcons hvah hvat => Hcons hvah (hvect_app hvat hvb)
+    end.
+
    
 End Hvect.
 
@@ -373,6 +384,7 @@ Section Test.
   Eval compute in @hvect_head _ vc hvc.
   Eval compute in hvect_tail hvc.
   Eval compute in hvect_zip hva hvc.
+  Eval compute in hvect_app hva hvc.
 
 End Test.
 
