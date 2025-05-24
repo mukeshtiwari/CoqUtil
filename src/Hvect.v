@@ -346,6 +346,42 @@ Section Hvect.
     | Hcons hvah hvat => Hcons hvah (hvect_app hvat hvb)
     end.
 
+  Definition hvect_to_vect: ∀ {n : nat} {v : Vector.t Type n},
+    Hvect n v -> Vector.t (sigT (fun A => A)) n.
+  Proof.
+    refine(fix fn (n : nat) (v : Vector.t Type n) 
+      (hv : Hvect n v) {struct hv}: 
+      Vector.t (sigT (fun A => A)) n := 
+      match hv as hv' in Hvect n' v' return 
+        Vector.t (sigT (fun A => A)) n' 
+      with 
+      | Hnil => @Vector.nil _ 
+      | Hcons hvh hvt => _ 
+      end).
+    refine (@Vector.cons _ _ _ _).
+    exists T. exact hvh.
+    eapply fn. exact hvt.
+  Defined.
+
+  Definition vect_to_hvect : ∀ {n : nat}, Vector.t (sigT (fun A => A)) n -> 
+    {v : Vector.t Type n &  Hvect n v}.
+  Proof.
+    refine(fix fn (n : nat) (v : Vector.t (sigT (fun A => A)) n) {struct v} : 
+       {u : Vector.t Type n &  Hvect n u} := 
+       match v as v' in Vector.t _ n' return 
+        {u : Vector.t Type n' &  Hvect n' u} 
+      with 
+      | [] => existT _ [] Hnil
+      | vh :: vt => _
+      end).
+    destruct (fn _ vt) as (u & hv).
+    destruct vh as (vhh & vht).
+    exists (vhh :: u).
+    exact (Hcons vht hv). 
+  Defined.
+    
+
+    
    
 End Hvect.
 
@@ -385,6 +421,8 @@ Section Test.
   Eval compute in hvect_tail hvc.
   Eval compute in hvect_zip hva hvc.
   Eval compute in hvect_app hva hvc.
+  Eval compute in hvect_to_vect hva.
+  Eval compute in  vect_to_hvect (hvect_to_vect hva).
 
 End Test.
 
