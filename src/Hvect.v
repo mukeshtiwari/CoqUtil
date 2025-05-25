@@ -379,10 +379,82 @@ Section Hvect.
     exists (vhh :: u).
     exact (Hcons vht hv). 
   Defined.
-    
 
-    
-   
+  Definition hvect_to_fin : ∀ {n : nat} {v : Vector.t Type n}, 
+    Hvect n v -> ∀ (f : Fin.t n), Vector.nth v f.
+  Proof.
+    refine(fix fn (n : nat) (v : Vector.t Type n)
+      (hv : Hvect n v) {struct hv} : ∀ (f : Fin.t n), Vector.nth v f := 
+      match hv as hv' in Hvect n' v' return 
+        ∀ (f : Fin.t n'), Vector.nth v' f
+      with 
+      | Hnil => fun f => match f with end
+      | Hcons hvh hvt => fun f => _ 
+      end).
+    refine 
+      (match f as f' in Fin.t n' return ∀ (pf : S n0 = n'),
+        (match n' as n'' return Vector.t Type (Nat.pred n'') -> Fin.t n'' -> Type 
+        with
+        | 0 => fun _ _ => IDProp 
+        | S n'' => fun (ea : Vector.t Type n'') (eb : Fin.t (S n'')) => 
+          (T :: ea)[@eb]
+        end (@eq_rect _ (S n0) (fun np => Vector.t Type (Nat.pred np)) 
+            t n' pf) f')
+      with 
+      | Fin.F1 => fun _ => hvh 
+      | Fin.FS f' => fun pf => _
+      end eq_refl); cbn.
+      inversion pf as [ha]; subst.
+      assert (hb : pf = eq_refl) by 
+      (apply Eqdep_dec.UIP_refl_nat).
+      subst; cbn.
+      eapply fn. exact hvt.
+  Defined.
+
+  Definition fin_to_hvect : ∀ {n : nat} {v : Vector.t Type n}, 
+    (∀ (f : Fin.t n), Vector.nth v f) -> Hvect n v.
+  Proof.
+    refine(fix fn (n : nat) {struct n} : ∀ (v : Vector.t Type n), 
+    (∀ (f : Fin.t n), Vector.nth v f) -> Hvect n v := 
+    match n as n' in nat return ∀ (pf : n = n') (v : Vector.t Type n'), 
+    (∀ (f : Fin.t n'), Vector.nth v f) -> Hvect n' v 
+    with 
+    | 0 => fun ha v f => _ 
+    | S n' => fun ha => _ 
+    end eq_refl).
+    +
+      refine 
+        (match v as v' in Vector.t _ n' return 
+          (match n' as n'' return Vector.t Type n'' -> Type 
+          with 
+          | 0 => fun e : Vector.t Type 0 => Hvect 0 e 
+          | S n'' => fun _ => IDProp 
+          end v') 
+        with 
+        | [] => Hnil 
+        end).
+    +
+      intro v.
+      refine 
+        (match v as v' in Vector.t _ np return ∀ (pf : S n' = np),
+          (match np as n'' in nat return Vector.t Type n'' -> Type 
+          with 
+          | 0 => fun _ => IDProp
+          | S n'' => fun (e : Vector.t Type (S n'')) => (∀ f : t (S n''), e[@f]) → Hvect (S n'') e
+          end v')
+        with
+        | [] => fun hb => idProp
+        | vh :: vt => fun ha f => _
+        end eq_refl).
+        eapply eq_sym in ha.
+        inversion ha; subst.
+        refine (Hcons (f Fin.F1) _).
+        eapply fn. intro i.
+        exact (f (Fin.FS i)).
+  Defined.
+
+
+      
 End Hvect.
 
 
@@ -423,6 +495,7 @@ Section Test.
   Eval compute in hvect_app hva hvc.
   Eval compute in hvect_to_vect hva.
   Eval compute in  vect_to_hvect (hvect_to_vect hva).
+  Eval compute in hvect_to_fin hvc (FS F1).
 
 End Test.
 
