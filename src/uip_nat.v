@@ -30,6 +30,8 @@ Defined.
 
 
 (* small inversion *)
+Set Printing Implicit.
+
 Theorem uip_nat : ∀ (n : nat) (pf : n = n), pf = @eq_refl nat n.
 Proof.
   refine(fix fn (n : nat) : ∀ (pf : n = n), pf = @eq_refl nat n := 
