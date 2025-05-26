@@ -3,7 +3,7 @@ Require Import
   Vector
   List
   Arith
-  Lia.
+  Lia Utf8 Inverse_Image.
 
 Import ListNotations.
 
@@ -39,6 +39,7 @@ Definition array_to_queue (f r : nat) (vec : Vector.t (option nat) L)  :=
     | right _ => nil 
   end.
 
+
 Lemma rec_irr : forall r f vec (acc acc' : Acc lt (r - f)),
     array_to_queue_rec f r vec acc = array_to_queue_rec f r vec acc'.
 Proof.
@@ -51,26 +52,34 @@ Proof.
   exact eq_refl.
 Qed.
 
+
+
 Theorem array_to_queue_rec_length_aux : forall x (vec : Vector.t (option nat) L) 
   f r acc, x = r - f -> length (array_to_queue_rec f r vec acc) = x.
 Proof.
   intro x.
+  induction x as [x ihn]  using (well_founded_ind 
+    (wf_inverse_image _ _ lt (fun n => n) lt_wf)).
+  (* Two more ways to do the induction 
+  induction x as [x ihn] using (well_founded_induction lt_wf).
   induction (Wf_nat.lt_wf x) as [x _ ihn].
+  *)
   intros * ha.
   specialize (ihn (r - S f)).  subst.
   destruct (lt_dec f r) as [ha | ha].
   + 
     specialize (ihn ltac:(nia) vec (S f) r).
     assert (hb : Acc lt (r - S f)).
-    constructor.  intros. 
-    inversion acc as [hacc]. 
-    apply hacc. nia.
-    specialize (ihn hb eq_refl).
+    {
+      constructor.  intros. 
+      inversion acc as [hacc]. 
+      apply hacc. nia.
+    }
+    specialize (ihn hb eq_refl). 
     destruct acc; cbn. 
     destruct (lt_dec f r) as [hc | hc]; try nia.
-    cbn. rewrite length_app. cbn.
-    rewrite rec_irr with (acc' := hb).
-    rewrite ihn. nia.
+    rewrite length_app, rec_irr with (acc' := hb), ihn.
+    cbn. nia.
   +
     destruct acc; cbn.
     destruct (lt_dec f r); try nia.
@@ -84,7 +93,7 @@ Proof.
   destruct (lt_dec f r) as [ha | ha].
   + 
     eapply array_to_queue_rec_length_aux. 
-    reflexivity.
+    exact eq_refl.
   + 
     cbn; nia. 
 Qed.
