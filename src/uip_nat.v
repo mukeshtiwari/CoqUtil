@@ -27,3 +27,40 @@ Proof.
     destruct pf; cbn;
     reflexivity.
 Defined.
+
+
+(* small inversion *)
+Theorem uip_nat : ∀ (n : nat) (pf : n = n), pf = @eq_refl nat n.
+Proof.
+  refine(fix fn (n : nat) : ∀ (pf : n = n), pf = @eq_refl nat n := 
+    match n as n' in nat return 
+      ∀ (pf : n' = n'), pf = @eq_refl nat n' 
+    with 
+    | 0 => fun pf => _ 
+    | S np => fun pf => _ 
+    end). 
+  +
+    refine(match pf as pf' in _ = n' return 
+      (match n' as n'' return 0  = n'' -> Type 
+      with 
+      | 0 => fun (e : 0 = 0) => e = @eq_refl _ 0 
+      | S n' => fun _ => IDProp 
+      end pf')
+      with 
+      | eq_refl => eq_refl
+      end).
+    +
+      specialize (fn np (f_equal Nat.pred pf)). 
+      change eq_refl with (f_equal S (@eq_refl _ np)).
+      rewrite <-fn; clear fn.
+      refine 
+      (match pf as pf' in _ = n' return 
+        (match n' as n'' return S np = n'' -> Type 
+        with 
+        | 0 => fun _ => IDProp
+        | S n'' => fun e => e = f_equal S (f_equal Nat.pred e)
+        end pf')
+      with 
+      | eq_refl => eq_refl
+      end).
+Defined.
