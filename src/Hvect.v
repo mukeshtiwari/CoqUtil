@@ -3,6 +3,7 @@ Import VectorNotations.
 
 Section UIP.
 
+  (* Set Printing Implicit. *)
   Theorem uip_nat : ∀ (n : nat) (pf : n = n), pf = @eq_refl nat n.
   Proof.
     refine(fix fn (n : nat) : ∀ (pf : n = n), pf = @eq_refl nat n := 
@@ -13,17 +14,18 @@ Section UIP.
       | S np => fun pf => _ 
       end). 
     +
-      refine(match pf as pf' in _ = n' return 
-        (match n' as n'' return 0  = n'' -> Type 
-        with 
-        | 0 => fun (e : 0 = 0) => e = @eq_refl _ 0 
-        | S n' => fun _ => IDProp 
-        end pf')
+      refine
+        (match pf as pf' in _ = n' return 
+          (match n' as n'' return 0  = n'' -> Type 
+          with 
+          | 0 => fun (e : 0 = 0) => e = @eq_refl _ 0 
+          | S n' => fun _ => IDProp 
+          end pf')
         with 
         | eq_refl => eq_refl
         end).
       +
-        specialize (fn np (f_equal Nat.pred pf)). 
+        specialize (fn np (f_equal Nat.pred pf)).
         change eq_refl with (f_equal S (@eq_refl _ np)).
         rewrite <-fn; clear fn.
         refine 
@@ -37,6 +39,76 @@ Section UIP.
         | eq_refl => eq_refl
         end).
   Defined.
+
+  Theorem uip_nat_irr : ∀ (n : nat) (ha hb : n = n), ha = hb.
+  Proof.
+    intros *. 
+    pose proof (uip_nat _ ha).
+    pose proof (uip_nat _ hb).
+    subst.
+    exact eq_refl.
+  Defined.
+
+  Theorem uip_nat_irr_ind : ∀ (n : nat) (ha hb : n = n), ha = hb.
+  Proof.
+    refine(fix fn (n : nat) : ∀ (ha hb : n = n), ha = hb := 
+      match n as n' in nat return ∀ (ha hb : n' = n'), ha = hb
+      with 
+      | 0 => _ 
+      | S n' => _ 
+      end).
+    +
+      intro ha. 
+      refine
+        (match ha as ha' in _ = np return
+          (match np as np' return 0 = np' -> Type 
+          with 
+          | 0 => fun (e : 0 = 0) => ∀ (hb : 0 = 0), e = hb
+          | S np' => fun _ => IDProp
+          end ha')
+        with 
+        | eq_refl => fun hb => _ 
+        end).
+      refine
+        (match hb as hb' in _ = np return 
+         (match np as np' return 0 = np' -> Type 
+          with 
+          | 0 => fun (e : 0 = 0) =>  eq_refl = e
+          | S np' => fun _ => IDProp
+          end hb')
+        with 
+        | eq_refl => eq_refl
+        end).
+    +
+      (* Induction case *)
+      intro ha.     
+      refine
+        (match ha as ha' in _ = np return 
+          (match np as np' return S n' = np' -> Type 
+          with 
+          | 0 => fun _ => IDProp 
+          | S np' => fun (e : S n' = S np') => ∀ (hb : S n' = S np'), e = hb
+          end ha')
+        with 
+        | eq_refl => _ 
+        end).
+      intro hb.
+      change eq_refl with (f_equal S (@eq_refl _ n')).
+      specialize (fn n' eq_refl (f_equal Nat.pred hb)).
+      rewrite fn. 
+      clear fn. clear ha.
+      refine
+        (match hb as hb' in _ = np return 
+          (match np as np' return S n' = np' -> Type 
+          with 
+          | 0 => fun _ => IDProp 
+          | S np' => fun (e : S n' = S np') => 
+            f_equal S (f_equal Nat.pred e) = e
+          end hb')
+        with 
+        | eq_refl => eq_refl
+        end).
+  Defined.    
 
 End UIP. 
 
