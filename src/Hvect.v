@@ -1,7 +1,47 @@
 From Stdlib Require Import Utf8 Vector Fin.
 Import VectorNotations.
 
+Section UIP.
+
+  Theorem uip_nat : ∀ (n : nat) (pf : n = n), pf = @eq_refl nat n.
+  Proof.
+    refine(fix fn (n : nat) : ∀ (pf : n = n), pf = @eq_refl nat n := 
+      match n as n' in nat return 
+        ∀ (pf : n' = n'), pf = @eq_refl nat n' 
+      with 
+      | 0 => fun pf => _ 
+      | S np => fun pf => _ 
+      end). 
+    +
+      refine(match pf as pf' in _ = n' return 
+        (match n' as n'' return 0  = n'' -> Type 
+        with 
+        | 0 => fun (e : 0 = 0) => e = @eq_refl _ 0 
+        | S n' => fun _ => IDProp 
+        end pf')
+        with 
+        | eq_refl => eq_refl
+        end).
+      +
+        specialize (fn np (f_equal Nat.pred pf)). 
+        change eq_refl with (f_equal S (@eq_refl _ np)).
+        rewrite <-fn; clear fn.
+        refine 
+        (match pf as pf' in _ = n' return 
+          (match n' as n'' return S np = n'' -> Type 
+          with 
+          | 0 => fun _ => IDProp
+          | S n'' => fun e => e = f_equal S (f_equal Nat.pred e)
+          end pf')
+        with 
+        | eq_refl => eq_refl
+        end).
+  Defined.
+
+End UIP. 
+
 Section Hvect.
+
 
   Inductive Hvect : ∀ (n : nat), Vector.t Type n -> Type :=
   | Hnil : Hvect 0 [] 
@@ -222,7 +262,7 @@ Section Hvect.
         eapply fn; [exact hvt | ].
         intros i hi.
         assert (hc : pfa = eq_refl) by 
-        (apply Eqdep_dec.UIP_refl_nat).
+        (apply uip_nat).
         subst; cbn in ha.
         exact (ha (Fin.FS i) hi).
   Defined.
@@ -331,7 +371,7 @@ Section Hvect.
         end eq_refl);
         inversion pf as [ha]; subst.  
         assert (hb : pf = eq_refl) by 
-        (apply Eqdep_dec.UIP_refl_nat).
+        (apply uip_nat).
         subst; cbn.
         refine(Hcons (hvah, hvbh) (fn _ _ hvat _ hvbt)).
   Defined.
@@ -406,7 +446,7 @@ Section Hvect.
       end eq_refl); cbn.
       inversion pf as [ha]; subst.
       assert (hb : pf = eq_refl) by 
-      (apply Eqdep_dec.UIP_refl_nat).
+      (apply uip_nat).
       subst; cbn.
       eapply fn. exact hvt.
   Defined.
@@ -452,6 +492,7 @@ Section Hvect.
         eapply fn. intro i.
         exact (f (Fin.FS i)).
   Defined.
+
 
 
       
