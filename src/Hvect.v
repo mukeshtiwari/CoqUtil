@@ -16,7 +16,7 @@ Section UIP.
     +
       refine
         (match pf as pf' in _ = n' return 
-          (match n' as n'' return 0  = n'' -> Type 
+          (match n' as n'' return 0 = n'' -> Type 
           with 
           | 0 => fun (e : 0 = 0) => e = @eq_refl _ 0 
           | S n' => fun _ => IDProp 
@@ -107,10 +107,13 @@ Section UIP.
           end hb')
         with 
         | eq_refl => eq_refl
-        end).
-  Defined.    
+        end). 
+  Defined.
+
+  
 
 End UIP. 
+
 
 Section Hvect.
 
@@ -211,7 +214,6 @@ Section Hvect.
     end).
   Defined.
 
-
   Definition hvect_nth_fin : ∀ {n : nat} {v : Vector.t Type n}, Hvect n v ->
     ∀ (f : Fin.t n), Vector.nth v f.
   Proof.
@@ -223,11 +225,42 @@ Section Hvect.
       | @Hcons _ n' _ hvh hvt => fun (f : Fin.t (S n')) => _ 
       end).
     destruct (fin_inv _ f) as [ha | (f' & ha)]; subst; cbn;
-    [exact hvh | eapply fn; exact hvt].
+    [exact hvh | eapply fn; exact hvt]. 
   Defined.
 
+
+  Definition hvect_nth_fin_ind : ∀ {n : nat} {v : Vector.t Type n}, Hvect n v ->
+    ∀ (f : Fin.t n), Vector.nth v f.
+  Proof.
+    refine(fix fn (n : nat) (v : Vector.t Type n) 
+      (hv : Hvect n v) {struct hv} : forall (f : Fin.t n), v[@f] :=
+      match hv in Hvect n' v' return forall (f : Fin.t n'), v'[@f] 
+      with
+      | Hnil => fun f => match f with end 
+      | @Hcons _ n' vt hvh hvt => fun f => _ 
+      end).
+    refine
+      (match f as f' in Fin.t np return ∀ (pf : S n' = np), 
+        (∀ f : Fin.t n', vt[@f]) ->
+        (match np as np' return Vector.t Type (Nat.pred np') -> Fin.t np' -> Type 
+        with
+        | 0 => fun _ _  => IDProp
+        | S n' => fun ea eb => (T :: ea)[@eb]
+        end
+        (eq_rect (S n') (fun w => Vector.t Type (Nat.pred w)) vt np pf) f')
+        with 
+        | Fin.F1 => fun _ _ => hvh
+        | @Fin.FS nw fp => fun pfa fret => _
+        end eq_refl (fn _ vt hvt)). 
+        cbn. 
+        inversion pfa; subst; cbn.
+        assert (ha : pfa = eq_refl) by 
+        (apply uip_nat). subst; cbn.
+        eapply fret. 
+  Defined. 
+
   
-  Eval compute in hvect_nth_fin (Hcons true (Hcons 1 Hnil)) (FS F1).
+  Eval compute in hvect_nth_fin_ind (Hcons true (Hcons 1 Hnil)) (FS F1).
 
   
   Definition hvect_nth : ∀ {n : nat} (f : Fin.t n) 
@@ -239,7 +272,7 @@ Section Hvect.
         Hvect n' v → v[@f']
       with 
       | @Fin.F1 nf => fun v hv => _ 
-      | @Fin.FS nf f => fun v hv => _ 
+      | @Fin.FS nf fp => fun v hv => _ 
       end).
     +     
       refine 
@@ -252,7 +285,7 @@ Section Hvect.
         with 
         | Hcons hvh hvt => hvh
         end).
-    + 
+    +
       refine
         (match hv in Hvect n' v' return forall (pf : n' = S nf), 
           (match n' as n'' return Fin.t (Nat.pred n'') -> 
@@ -261,14 +294,15 @@ Section Hvect.
           | 0 => fun _ _ => IDProp
           | S m' => fun (ea : Fin.t m') (v : Vector.t Type (S m')) => v[@FS ea]
           end (eq_rec_r (λ np : nat, t (Nat.pred np))
-              (f : t (Nat.pred (S nf))) pf) v')
+              (fp : Fin.t (Nat.pred (S nf))) pf) v')
          with
          | Hnil => fun _ => idProp
          | Hcons hvh hvt => fun pf => _ 
          end eq_refl); cbn.
       eapply fn.
-      exact hvt.
+      exact hvt.  Show Proof.
   Defined.  
+
   
   Eval compute in hvect_nth (FS F1) (Hcons true (Hcons 1 Hnil)).
   
@@ -567,6 +601,7 @@ Section Hvect.
 
 
 
+
       
 End Hvect.
 
@@ -616,3 +651,4 @@ Require Import Extraction.
 Extraction Language OCaml.
 Recursive Extraction hvect_filter.
 Extraction hvect_zip.
+Print uip_nat_irr_ind.
