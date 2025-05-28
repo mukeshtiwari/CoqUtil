@@ -110,7 +110,21 @@ Section UIP.
         end). 
   Defined.
 
-  
+  Theorem le_inv : ∀ (n m : nat) (e : le n m),
+    (exists H : m = n, eq_rect m  (fun w => le n w) e n H = le_n n) ∨
+    (exists mp (H : m = S mp) (Hle : le n mp), eq_rect m _ e (S mp) H = le_S n mp Hle).
+  Proof.
+    intros n m e.
+    refine
+      (match e as e' in le _ m' return 
+        (exists H : m' = n, eq_rect m'  (fun w => le n w) e' n H = le_n n) ∨
+        (exists mp (H : m' = S mp) (Hle : le n mp), eq_rect m' _ e' _ H = le_S n mp Hle)
+      with 
+      | le_n _ => or_introl (ex_intro _ eq_refl eq_refl)
+      | le_S _ np p => or_intror 
+        (ex_intro _ np (ex_intro _ eq_refl (ex_intro _ p eq_refl)))
+      end).
+  Defined.
 
 End UIP. 
 
