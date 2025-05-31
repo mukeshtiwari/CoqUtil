@@ -208,6 +208,7 @@ Section UIP.
           intros pfc. subst.
           abstract nia.  
     +
+      specialize (fn _ _ pfb).
       intros * hb hc.
       refine(match hc as hc' in _ ≤ (S mp) return ∀ (pf : mp = m'),
           le_S n mp (@eq_rect _ m' (fun w => n ≤ w) pfb mp (eq_sym pf)) = hc'
@@ -256,27 +257,28 @@ Section UIP.
           intros pfc. subst.
           abstract nia.  
     +
+      specialize (fn _ _ pfb).
       intros * hb hc. 
       generalize dependent pfb.
       generalize dependent pfa.
       generalize dependent hc.
       refine(fun hc => 
-        match hc as hc' in _ ≤ mp return ∀ (pf : mp = S m') pfa pfb hb,
+        match hc as hc' in _ ≤ mp return ∀ (pf : mp = S m') pfa pfb hb hc,
           le_S n m' pfb = @eq_rect _ mp _ hc' (S m') pf   
         with 
         | le_n _ => _ 
         | le_S _ nw pfc => _
         end eq_refl).
       ++
-        intros * hb. subst. 
+        intros * hb hd. subst. 
         abstract nia.
       ++
-        intros * hb.   
+        intros * hb hd.   
         inversion pf as [hpf]; subst.
         assert (hd : pf = eq_refl) by 
         (apply uip_nat). 
         subst; cbn. 
-        f_equal; eapply fn.
+        f_equal; eapply hb.
   Defined.
 
      
