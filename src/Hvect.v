@@ -166,9 +166,9 @@ Section UIP.
         with 
         | le_n _ => _ 
         | le_S _ nw pfc => _
-        end eq_refl). 
+        end eq_refl).
       ++
-        intros *. subst. 
+        intros * hb. subst. 
         abstract nia.
       ++
         intros * hb.  
