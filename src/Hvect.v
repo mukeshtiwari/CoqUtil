@@ -126,7 +126,8 @@ Section UIP.
       end).
   Defined.
 
-  Theorem le_unique_fail : ∀ (n m : nat) (ha hb : le n m), ha = hb.
+  (* Thanks Johannes! *)
+  Theorem le_unique_specialize_earlier : ∀ (n m : nat) (ha hb : le n m), ha = hb.
   Proof.
     refine(fix fn (n m : nat) (ha : le n m) {struct ha} : 
       ∀ (hb : le n m), ha = hb := 
@@ -135,7 +136,7 @@ Section UIP.
         ∀ (hb : le n m'), ha' = hb 
       with
       | le_n _ =>  _ 
-      | le_S _ m' pfb => _ 
+      | le_S _ m' pfb => _  
       end eq_refl eq_refl).
     +
       intros * hb hc.
@@ -156,12 +157,14 @@ Section UIP.
           intros pfc. subst.
           abstract nia.  
     +
+      (* here we have pfb, the structurally smaller value *)
+      specialize (fn _ _ pfb). 
       intros * hb hc.
       generalize dependent pfb.
       generalize dependent pfa.
       generalize dependent hc.
       refine(fun hc => 
-        match hc as hc' in _ ≤ (S mp) return ∀ (pf : mp = m') pfa pfb hb,
+        match hc as hc' in _ ≤ (S mp) return ∀ (pf : mp = m') pfa pfb fn hb,
           le_S n mp (@eq_rect _ m' (fun w => n ≤ w) pfb mp (eq_sym pf)) = hc'
         with 
         | le_n _ => _ 
@@ -171,14 +174,13 @@ Section UIP.
         destruct n as [| n].
         +++ exact idProp.
         +++
-          intros * hb. abstract nia.
+          intros * hb. abstract nia. 
       ++
-        intros * hb. subst; cbn.
-        f_equal. eapply fn. 
-        Fail Guarded.
-  Admitted.
+        intros * hb hd. subst; cbn.
+        f_equal. eapply hb. 
+  Defined.  
 
-  Theorem le_unique_didnot_fail : ∀ (n m : nat) (ha hb : le n m), ha = hb.
+  Theorem le_unique_another : ∀ (n m : nat) (ha hb : le n m), ha = hb.
   Proof.
     refine(fix fn (n m : nat) (ha : le n m) {struct ha} : 
       ∀ (hb : le n m), ha = hb := 
