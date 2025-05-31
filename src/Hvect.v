@@ -117,7 +117,7 @@ Section UIP.
     intros n m e.
     refine
       (match e as e' in le _ m' return 
-        (exists H : m' = n, eq_rect m'  (fun w => le n w) e' n H = le_n n) ∨
+        (exists H : m' = n, eq_rect m' (fun w => le n w) e' n H = le_n n) ∨
         (exists mp (H : m' = S mp) (Hle : le n mp), eq_rect m' _ e' _ H = le_S n mp Hle)
       with 
       | le_n _ => or_introl (ex_intro _ eq_refl eq_refl)
@@ -125,6 +125,58 @@ Section UIP.
         (ex_intro _ np (ex_intro _ eq_refl (ex_intro _ p eq_refl)))
       end).
   Defined.
+
+  Theorem le_unique : ∀ (n m : nat) (ha hb : le n m), ha = hb.
+  Proof.
+    refine(fix fn (n m : nat) (ha : le n m) {struct ha} : 
+      ∀ (hb : le n m), ha = hb := 
+      match ha as ha' in le _ m' return ∀(pfa : m = m'), 
+        ha = @eq_rect nat m' (fun w => le n w) ha' m (eq_sym pfa) -> 
+        ∀ (hb : le n m'), ha' = hb 
+      with
+      | le_n _ =>  _ 
+      | le_S _ m' pfb => _ 
+      end eq_refl eq_refl).
+    +
+      intros * hb hc.
+      generalize dependent hc.
+      refine(fun hc => 
+        match hc as hc' in _ ≤ n' return ∀ (pfb : n = n'), 
+          le_n n' = @eq_rect _ n (fun w => w ≤ n') hc' n' pfb  
+        with 
+        | le_n _ => _ 
+        | le_S _ nw pfb => _ 
+        end eq_refl).     
+        ++
+          intros *. 
+          assert (hd : pfb = eq_refl) by 
+          (apply uip_nat).
+          subst; cbn; exact eq_refl. 
+        ++
+          clear fn.
+          intros pfc. subst.
+          refine match (PeanoNat.Nat.nle_succ_diag_l _ pfb) with end. 
+    +
+      intros * hb hc. 
+      refine(match hc as hc' in _ ≤ mp return ∀ (pf : mp = S m'), 
+          le_S n m' pfb = @eq_rect _ mp _ hc' (S m') pf   
+        with 
+        | le_n _ => _ 
+        | le_S _ nw pfc => _
+        end eq_refl).
+      ++
+        clear fn.
+        intros *. subst.
+        refine match (PeanoNat.Nat.nle_succ_diag_l _ pfb) with end.
+      ++
+        intros *.  
+        inversion pf as [hpf]; subst.
+        assert (hd : pf = eq_refl) by 
+        (apply uip_nat). 
+        subst; cbn. 
+        f_equal. eapply fn.
+  Defined.
+
 
 End UIP. 
 
@@ -665,4 +717,3 @@ Require Import Extraction.
 Extraction Language OCaml.
 Recursive Extraction hvect_filter.
 Extraction hvect_zip.
-Print uip_nat_irr_ind.
