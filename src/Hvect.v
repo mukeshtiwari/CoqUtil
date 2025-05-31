@@ -1,4 +1,4 @@
-From Stdlib Require Import Utf8 Vector Fin.
+From Stdlib Require Import Utf8 Vector Fin Psatz.
 Import VectorNotations.
 
 Section UIP.
@@ -153,31 +153,32 @@ Section UIP.
           (apply uip_nat).
           subst; cbn; exact eq_refl. 
         ++
-          clear fn.
           intros pfc. subst.
-          refine match (PeanoNat.Nat.nle_succ_diag_l _ pfb) with end. 
+          abstract nia.  
     +
       intros * hb hc. 
-      refine(match hc as hc' in _ ≤ mp return ∀ (pf : mp = S m'), 
+      generalize dependent pfb.
+      generalize dependent pfa.
+      generalize dependent hc.
+      refine(fun hc => 
+        match hc as hc' in _ ≤ mp return ∀ (pf : mp = S m') pfa pfb hb,
           le_S n m' pfb = @eq_rect _ mp _ hc' (S m') pf   
         with 
         | le_n _ => _ 
         | le_S _ nw pfc => _
-        end eq_refl).
+        end eq_refl). 
       ++
-        clear fn.
-        intros *. subst.
-        refine match (PeanoNat.Nat.nle_succ_diag_l _ pfb) with end.
+        intros *. subst. 
+        abstract nia.
       ++
-        intros *.  
+        intros * hb.  
         inversion pf as [hpf]; subst.
         assert (hd : pf = eq_refl) by 
         (apply uip_nat). 
         subst; cbn. 
         f_equal. eapply fn.
   Defined.
-
-
+     
 End UIP. 
 
 
