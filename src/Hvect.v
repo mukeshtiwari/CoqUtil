@@ -543,6 +543,76 @@ Section Hvect.
         exact (ha (Fin.FS i) hi).
   Defined.
 
+  Definition hvect_map_specialized : ∀  {n : nat} {va vb : Vector.t Type n}, Hvect n va ->
+   (∀ (i : Fin.t n), Vector.nth va i -> Vector.nth vb i) -> Hvect n vb.
+  Proof.
+    refine(fix fn n va vb hv {struct hv} : 
+      (∀ i : Fin.t n, va[@i] → vb[@i]) → Hvect n vb := 
+      match hv as hv' in Hvect n' va' return ∀ (pf : n = n'), 
+        (∀ i : Fin.t n', va'[@i] → vb[@(eq_rec_r _ i pf)]) → 
+        Hvect n' (@eq_rect _ n _ vb n' pf)
+      with 
+      | Hnil => _
+      | @Hcons vah na vat hvh hvt => let ret := fun vb fi => 
+           fn na vat vb hvt fi in _ (* I instantiated the induction hypothesis here *)
+      end eq_refl).
+    +
+      intros * ha. 
+      generalize dependent va.
+      generalize dependent vb.
+      rewrite pf; cbn.
+      intros * ha * hv.
+      revert ha.
+      refine 
+        match vb as vb' in Vector.t _ n' return 
+          (match n' as np return Vector.t _ np -> Type 
+          with 
+          | 0 => fun e => (∀ i : t 0, False_rect Type 
+            (case0 (fun _ : t 0 =>  False) i) →  e[@i]) →  Hvect 0 e
+          | S m' => fun _ => IDProp
+          end vb')
+        with 
+        | [] => fun ea => Hnil 
+        | _ => idProp
+        end.
+    +
+      clearbody ret. clear fn.
+      intros * ha.
+      generalize dependent va.
+      generalize dependent vb.
+      rewrite pf; cbn.
+      intro vb.
+      intros * ha * hv.
+      revert ha.
+      refine
+        (match vb as vb' in Vector.t _ nw return ∀ (pfa : S na = nw),
+          (match nw as np return ∀ (pfb : nw = np), Vector.t _ np -> Type 
+          with 
+          | 0 => fun (pfb : nw = 0) (e : Vector.t Type 0) => IDProp
+          | S n'' => fun (pfb : nw = S n'') (e : Vector.t Type (S n'')) => 
+            ((∀ i : Fin.t (S n''), 
+              match i in (Fin.t m')
+              return (Vector.t Type (Nat.pred m') → Type)
+              with
+              | @F1 n1 => fun _ => vah
+              | @FS n1 p' => fun (v' : Vector.t Type n1) => v'[@p']
+              end (@eq_rect _ (S na) (fun nt => Vector.t Type (Nat.pred nt)) 
+                vat (S n'') (eq_trans pfa pfb)) → e[@i]) → Hvect (S n'') e)
+          end eq_refl vb')
+        with 
+        | [] => fun _ => idProp
+        | vbh :: vbt => fun pfa ha => _
+        end eq_refl); inversion pfa; subst.
+        refine (Hcons (ha Fin.F1 hvh) _).
+        eapply ret. 
+        intros i hi.
+        assert (hc : pfa = eq_refl) by 
+        (apply uip_nat).
+        subst; cbn in ha.
+        exact (ha (Fin.FS i) hi).
+  Defined.  
+
+
 
   
   Definition hvect_filter : ∀ {n : nat} {va : Vector.t Type n}, Hvect n va ->
