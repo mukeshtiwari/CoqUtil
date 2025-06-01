@@ -136,7 +136,7 @@ Section UIP.
         ∀ (hb : le n m'), ha' = hb 
       with
       | le_n _ =>  _ 
-      | le_S _ m' pfb => _  
+      | le_S _ m' pfb => _
       end eq_refl eq_refl).
     +
       intros * hb hc.
@@ -455,7 +455,7 @@ Section Hvect.
         with 
         | Hcons hvh hvt => hvh
         end).
-    +
+    + 
       refine
         (match hv in Hvect n' v' return forall (pf : n' = S nf), 
           (match n' as n'' return Fin.t (Nat.pred n'') -> 
@@ -470,7 +470,7 @@ Section Hvect.
          | Hcons hvh hvt => fun pf => _ 
          end eq_refl); cbn.
       eapply fn.
-      exact hvt.  Show Proof.
+      exact hvt. 
   Defined.  
 
   
@@ -486,7 +486,7 @@ Section Hvect.
         Hvect n' (@eq_rect _ n _ vb n' pf)
       with 
       | Hnil => _
-      | Hcons hvh hvt => _ 
+      | @Hcons vah na vat hvh hvt => _ 
       end eq_refl).
     +
       intros * ha. 
@@ -516,7 +516,7 @@ Section Hvect.
       intros * ha * hv.
       revert ha.
       refine
-        (match vb as vb' in Vector.t _ nw return ∀ (pfa : S n0 = nw),
+        (match vb as vb' in Vector.t _ nw return ∀ (pfa : S na = nw),
           (match nw as np return ∀ (pfb : nw = np), Vector.t _ np -> Type 
           with 
           | 0 => fun (pfb : nw = 0) (e : Vector.t Type 0) => IDProp
@@ -525,22 +525,22 @@ Section Hvect.
               match i in (Fin.t m')
               return (Vector.t Type (Nat.pred m') → Type)
               with
-              | @F1 n1 => fun _ => T
+              | @F1 n1 => fun _ => vah
               | @FS n1 p' => fun (v' : Vector.t Type n1) => v'[@p']
-              end (@eq_rect _ (S n0) (fun nt => Vector.t Type (Nat.pred nt)) 
-                t (S n'') (eq_trans pfa pfb)) → e[@i]) → Hvect (S n'') e)
+              end (@eq_rect _ (S na) (fun nt => Vector.t Type (Nat.pred nt)) 
+                vat (S n'') (eq_trans pfa pfb)) → e[@i]) → Hvect (S n'') e)
           end eq_refl vb')
         with 
         | [] => fun _ => idProp
         | vbh :: vbt => fun pfa ha => _
         end eq_refl); inversion pfa; subst.
         refine (Hcons (ha Fin.F1 hvh) _).
-        eapply fn; [exact hvt | ].
+        eapply fn; [exact hvt | ]. 
         intros i hi.
         assert (hc : pfa = eq_refl) by 
         (apply uip_nat).
         subst; cbn in ha.
-        exact (ha (Fin.FS i) hi).
+        exact (ha (Fin.FS i) hi). 
   Defined.
 
   Definition hvect_map_specialized : ∀  {n : nat} {va vb : Vector.t Type n}, Hvect n va ->
@@ -554,7 +554,7 @@ Section Hvect.
       with 
       | Hnil => _
       | @Hcons vah na vat hvh hvt => let ret := fun vb fi => 
-           fn na vat vb hvt fi in _ (* I instantiated the induction hypothesis here *)
+           fn na vat vb hvt fi in _       (* I instantiated the induction hypothesis here *)
       end eq_refl).
     +
       intros * ha. 
@@ -576,7 +576,7 @@ Section Hvect.
         | _ => idProp
         end.
     +
-      clearbody ret. clear fn.
+      clearbody ret; clear fn.
       intros * ha.
       generalize dependent va.
       generalize dependent vb.
@@ -610,8 +610,7 @@ Section Hvect.
         (apply uip_nat).
         subst; cbn in ha.
         exact (ha (Fin.FS i) hi).
-  Defined.  
-
+  Defined.
 
 
   
