@@ -721,6 +721,65 @@ Section Hvect.
         refine(Hcons (hvah, hvbh) (fn _ _ hvat _ hvbt)).
   Defined.
 
+  Definition hvect_zip_specialized {n : nat} {va vb : Vector.t Type n}
+    {hva : Hvect n va} (hvb : Hvect n vb) : Hvect n (Vector.map2 prod va vb).
+  Proof.
+    generalize dependent n.
+    refine(fix fn (n : nat) (va vb : Vector.t Type n)
+      (hva : Hvect n va) {struct hva} : Hvect n vb ->
+      Hvect n (Vector.map2 prod va vb) :=
+      match hva as hva' in Hvect n' va' return ∀ (pf : n = n'),
+      (Hvect n' (@eq_rect _ n _ vb n' pf) ->
+      Hvect n' (Vector.map2 prod va' (@eq_rect _ n _ vb n' pf)))
+      with
+      | Hnil => fun pf hvb => _
+      | @Hcons vah na vat hvah hvat => fun pf hvb => 
+        let ret := fun vb hvbt => fn na vat vb hvat hvbt in _ 
+      end eq_refl).
+    +
+      generalize dependent vb.
+      rewrite pf; cbn; intros vb hvb.
+      refine
+        match vb as vb' in Vector.t _ n' return
+        (match n' as n'' return Vector.t _ n'' -> Type
+        with
+        | 0 => fun e => Hvect 0
+          (Vector.case0 (fun _ : Vector.t Type 0 => Vector.t Type 0)
+          [] e)
+        | _ => fun _ => IDProp
+        end vb')
+        with
+        | [] => Hnil
+        end.
+    +
+      clearbody ret. clear fn.
+      generalize dependent vb.
+      rewrite pf. intros vb hvb.
+      cbn in hvb.
+      change (eq_rect (S na) (Vector.t Type) vb (S na) eq_refl)
+      with vb.
+      generalize dependent vat.
+      refine
+      (match hvb as hvb' in Hvect n' vb' return ∀ (pf : S na = n'),
+        (match n' as n'' return Vector.t _ n'' -> Type
+         with
+          | 0 => fun _ => IDProp
+          | S n'' => fun (eb : Vector.t Type (S n'')) =>
+            ∀ (vat : Vector.t Type n''), Hvect n'' vat → 
+            (∀ ec : Vector.t Type n'', Hvect n'' ec → Hvect n'' (map2 prod vat ec)) →
+              Hvect (S n'') (map2 prod (vah :: vat) eb)
+          end vb')
+      with
+      | Hnil => fun _ => idProp
+      | Hcons hvbh hvbt => fun ha t hvat => _
+      end eq_refl).
+      intros ret.
+      eapply eq_sym in ha. subst.
+      inversion ha; subst; clear ha. 
+      refine(Hcons (hvah, hvbh) _).
+      eapply ret. exact hvbt.
+  Defined.
+
   Fixpoint hvect_app {n m : nat} {va : Vector.t Type n} {vb : Vector.t Type m}
     (hva : Hvect n va) (hvb : Hvect m vb) : 
     Hvect (n + m) (Vector.append va vb) :=
