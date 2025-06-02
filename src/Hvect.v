@@ -281,6 +281,28 @@ Section UIP.
         f_equal; eapply hb.
   Defined.
 
+  Theorem fin_eq : ∀ {n} (x y : Fin.t n), 
+    Fin.FS x = Fin.FS y -> x = y.
+  Proof.
+    intros n x y ha.
+    refine
+      (match ha in _ = a return 
+        (match a as a' in Fin.t n' return 
+          Fin.t (Nat.pred n') -> Type
+        with 
+        | Fin.F1 => fun _ => IDProp
+        | Fin.FS f => fun u => u = f
+        end x)
+      with 
+      | eq_refl => eq_refl
+      end). Show Proof. 
+  Defined.
+
+
+
+  
+    
+
      
 End UIP. 
 
@@ -554,7 +576,7 @@ Section Hvect.
       with 
       | Hnil => _
       | @Hcons vah na vat hvh hvt => let ret := fun vb fi => 
-           fn na vat vb hvt fi in _       (* I instantiated the induction hypothesis here *)
+           fn na vat vb hvt fi in _   (* I instantiated the induction hypothesis here *)
       end eq_refl).
     +
       intros * ha. 
@@ -949,3 +971,4 @@ Require Import Extraction.
 Extraction Language OCaml.
 Recursive Extraction hvect_filter.
 Extraction hvect_zip.
+
