@@ -931,6 +931,24 @@ Section Hvect.
       end). 
   Defined.
 
+  Definition vector_head {A : Type} {n : nat} : 
+    Vector.t A (S n) -> A.
+  Proof.
+    intro v.
+     refine
+      (match v as v' in Vector.t _ n' return
+        (match n' return Type
+        with 
+        | 0 => IDProp
+        | S n'' => A 
+        end)
+      with
+      | [] => idProp 
+      | vh :: _ => vh 
+      end).
+  Defined. 
+
+
   Theorem hvect_inv_head : ∀ {n : nat} {vh : Type} {vt : Vector.t Type n} 
     (hvha hvhb : vh) (hvta hvtb : Hvect n vt), 
     Hcons hvha hvta = Hcons hvhb hvtb -> hvha = hvhb.
@@ -943,7 +961,7 @@ Section Hvect.
           with
           | 0 => fun _ => Type 
           | S n'' => fun (e : Vector.t Type (S n'')) => 
-              Vector.hd e -> Type 
+              vector_head e -> Type 
           end v') 
         with 
         | Hnil => IDProp
