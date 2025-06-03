@@ -295,13 +295,8 @@ Section UIP.
         end x)
       with 
       | eq_refl => eq_refl
-      end). Show Proof. 
+      end). 
   Defined.
-
-
-
-  
-    
 
      
 End UIP. 
@@ -341,11 +336,11 @@ Section Hvect.
   Definition hvect_head {n : nat} {v : Vector.t Type (S n)} 
     (hu : Hvect (S n) v) : 
     match v as v' in Vector.t _ n' return 
-      (match n' as np return Vector.t _ np -> Type 
+      (match n' as np return Type 
       with
-      | 0 => fun e => IDProp  
-      | S n'' => fun (e : Vector.t Type (S n'')) => Type 
-      end v') 
+      | 0 => IDProp  
+      | S n'' => Type 
+      end) 
     with 
     | vh :: vt => vh 
     end.
@@ -357,11 +352,11 @@ Section Hvect.
         | 0 => fun e => IDProp 
         | S np' => fun (v : Vector.t Type (S np')) => 
              match v as v' in Vector.t _ n' return 
-              (match n' as np return Vector.t _ np -> Type 
+               (match n' as np return Type 
               with
-              | 0 => fun e => IDProp  
-              | S n'' => fun (e : Vector.t Type (S n'')) => Type 
-              end v') 
+              | 0 => IDProp  
+              | S n'' => Type 
+              end) 
             with 
             | [] => idProp
             | vh :: _ => vh 
@@ -376,11 +371,11 @@ Section Hvect.
   Definition hvect_tail {n : nat} {v : Vector.t Type (S n)} 
     (hu : Hvect (S n) v) : Hvect n 
     (match v as v' in Vector.t _ n' return 
-      (match n' as np return Vector.t _ np -> Type 
+      (match n' as np return Type 
       with
-      | 0 => fun e => IDProp  
-      | S n'' => fun (e : Vector.t Type (S n'')) => Vector.t Type n''
-      end v') 
+      | 0 => IDProp  
+      | S n'' => Vector.t Type n''
+      end) 
     with 
     | vh :: vt => vt
     end).
@@ -392,11 +387,11 @@ Section Hvect.
       | 0 => fun _ => IDProp
       | S n'' => fun (v : Vector.t Type (S n'')) => 
         Hvect n'' (match v as v' in Vector.t _ n' return 
-          (match n' as np return Vector.t _ np -> Type 
+          (match n' as np return Type 
           with
-          | 0 => fun e => IDProp  
-          | S n'' => fun (e : Vector.t Type (S n'')) => Vector.t Type n''
-          end v') 
+          | 0 => IDProp  
+          | S n'' => Vector.t Type n''
+          end) 
         with 
         | vh :: vt => vt
         end)
@@ -919,7 +914,69 @@ Section Hvect.
         exact (f (Fin.FS i)).
   Defined.
 
+  Definition vector_tail {A : Type} {n : nat} : 
+    Vector.t A (S n) -> Vector.t A n.
+  Proof.
+    intro v.
+    refine
+      (match v as v' in Vector.t _ n' return
+        (match n' return Type
+        with 
+        | 0 => Prop 
+        | S n'' => Vector.t A n''
+        end)
+      with
+      | [] => IDProp 
+      | vh :: vt => vt 
+      end). 
+  Defined.
 
+  Theorem hvect_inv_head : ∀ {n : nat} {vh : Type} {vt : Vector.t Type n} 
+    (hvha hvhb : vh) (hvta hvtb : Hvect n vt), 
+    Hcons hvha hvta = Hcons hvhb hvtb -> hvha = hvhb.
+  Proof.
+    intros * ha. 
+    refine
+      (match ha as ha' in _ = hv'  return 
+        (match hv' in Hvect n' v' return 
+          (match n' as n'' in nat  
+          with
+          | 0 => fun _ => Type 
+          | S n'' => fun (e : Vector.t Type (S n'')) => 
+              Vector.hd e -> Type 
+          end v') 
+        with 
+        | Hnil => IDProp
+        | Hcons hvh' _ => fun e => e = hvh' 
+        end hvha)
+      with 
+      | eq_refl => eq_refl 
+      end). 
+  Defined.
+
+
+  Theorem hvect_inv_tail : ∀ {n : nat} {vh : Type} {vt : Vector.t Type n} 
+    (hvha hvhb : vh) (hvta hvtb : Hvect n vt), 
+    Hcons hvha hvta = Hcons hvhb hvtb -> hvta = hvtb.
+  Proof.
+    intros * ha. 
+    refine
+      (match ha as ha' in _ = hv' return 
+        (match hv' as hv'' in Hvect n' v' return 
+          (match n' as n'' return Vector.t Type n'' -> Type
+          with
+          | 0 => fun _  => Type
+          | S n'' => fun (e : Vector.t Type (S n'')) => 
+           Hvect n'' (vector_tail e) -> Type
+          end v')
+        with 
+        | Hnil => IDProp
+        | @Hcons vh' ne vt' hvh' hvt' => fun e => e = hvt'
+        end hvta)
+      with 
+      | eq_refl => eq_refl
+      end). 
+  Defined.
 
 
       
@@ -971,4 +1028,3 @@ Require Import Extraction.
 Extraction Language OCaml.
 Recursive Extraction hvect_filter.
 Extraction hvect_zip.
-
