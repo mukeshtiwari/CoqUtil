@@ -168,14 +168,26 @@ Section Vect.
       end.
   Defined.
 
-  Theorem vector_inv {A : Type} : ∀ (n : nat) (v : Vector.t A n), 
-    match v as v' in Vector.t _ m return Vector.t _ m -> Prop 
-    with
-    | [] => fun u => u = []
-    | h :: t => fun u => u = h :: t 
-    end v.
+  Theorem pcons_inv_vec {A : Type} : ∀ (n : nat) (vh : A) (vt : Vector.t A n), 
+    p (S n) (vh :: vt) -> p n vt.
   Proof.
-    destruct v; exact eq_refl.
+    intros * ha.
+    refine
+      (match ha as ha' in p n' v' return 
+        (match n' as n'' in nat return Vector.t A n'' -> Prop
+        with 
+        | 0 => fun (ev : Vector.t A 0) => IDProp (* IDProp *)
+        | S n'' => fun (ev : Vector.t A (S n'')) => 
+          (match ev as ev' in Vector.t _ ne return  Prop 
+          with 
+          | [] =>  IDProp
+          | @Vector.cons _ _ ne' evt => p ne' evt
+          end)
+        end v')
+      with
+      | pnil => idProp
+      | pcons _ _ _ ha' => ha'
+      end). 
   Defined.
 
   
@@ -244,6 +256,19 @@ Section Vect.
         inversion hc as [hd]; clear hc.
         subst.  
         exact (hb _ h t (fn _ t)).
+  Defined.
+
+  Theorem vector_rect_type_vec {A : Type} : ∀ (P : ∀ (n : nat), Vector.t A n -> Type),
+    P 0 [] -> (∀ (n : nat) (h : A) (v : Vector.t A n), P n v -> P (S n) (h :: v)) ->
+    ∀ (n : nat) (v : Vector.t A n), P n v.
+  Proof.
+    intros * ha hb.
+    refine(fix fn (n : nat) (v : Vector.t A n) : P n v := 
+      match v as v' in Vector.t _ n' return P n' v'
+      with
+      | [] => ha 
+      | @Vector.cons _ vh ne vt => hb ne vh vt (fn ne vt)
+      end).
   Defined.
 
 
