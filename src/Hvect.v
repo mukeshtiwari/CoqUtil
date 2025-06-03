@@ -922,11 +922,11 @@ Section Hvect.
       (match v as v' in Vector.t _ n' return
         (match n' return Type
         with 
-        | 0 => Prop 
+        | 0 => IDProp
         | S n'' => Vector.t A n''
         end)
       with
-      | [] => IDProp 
+      | [] => idProp 
       | vh :: vt => vt 
       end). 
   Defined.
@@ -971,7 +971,7 @@ Section Hvect.
           end v')
         with 
         | Hnil => IDProp
-        | @Hcons vh' ne vt' hvh' hvt' => fun e => e = hvt'
+        | @Hcons vh' ne vt' hvh' hvt' => fun (e : Hvect ne vt') => e = hvt'
         end hvta)
       with 
       | eq_refl => eq_refl
