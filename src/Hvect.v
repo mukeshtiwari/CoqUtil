@@ -4,10 +4,11 @@ Import VectorNotations.
 Section UIP.
 
   (* Set Printing Implicit. *)
-  Theorem uip_nat : ∀ (n : nat) (pf : n = n), pf = @eq_refl nat n.
+  Fixpoint uip_nat : ∀ (n : nat) (pf : n = n), pf = @eq_refl nat n.
   Proof.
-    refine(fix fn (n : nat) : ∀ (pf : n = n), pf = @eq_refl nat n := 
-      match n as n' in nat return 
+    intro n.
+    refine
+      (match n as n' in nat return 
         ∀ (pf : n' = n'), pf = @eq_refl nat n' 
       with 
       | 0 => fun pf => _ 
@@ -25,9 +26,9 @@ Section UIP.
         | eq_refl => eq_refl
         end).
       +
-        specialize (fn np (f_equal Nat.pred pf)).
+        specialize (uip_nat np (f_equal Nat.pred pf)).
         change eq_refl with (f_equal S (@eq_refl _ np)).
-        rewrite <-fn; clear fn.
+        rewrite <-uip_nat; clear uip_nat.
         refine 
         (match pf as pf' in _ = n' return 
           (match n' as n'' return S np = n'' -> Type 
@@ -49,9 +50,9 @@ Section UIP.
     exact eq_refl.
   Defined.
 
-  Theorem uip_nat_irr_ind : ∀ (n : nat) (ha hb : n = n), ha = hb.
+  Fixpoint uip_nat_irr_ind : ∀ (n : nat) (ha hb : n = n), ha = hb.
   Proof.
-    refine(fix fn (n : nat) : ∀ (ha hb : n = n), ha = hb := 
+    refine(fun n =>
       match n as n' in nat return ∀ (ha hb : n' = n'), ha = hb
       with 
       | 0 => _ 
@@ -94,9 +95,9 @@ Section UIP.
         end).
       intro hb.
       change eq_refl with (f_equal S (@eq_refl _ n')).
-      specialize (fn n' eq_refl (f_equal Nat.pred hb)).
-      rewrite fn. 
-      clear fn. clear ha.
+      specialize (uip_nat_irr_ind  n' eq_refl (f_equal Nat.pred hb)).
+      rewrite uip_nat_irr_ind. 
+      clear uip_nat_irr_ind. clear ha.
       refine
         (match hb as hb' in _ = np return 
           (match np as np' return S n' = np' -> Type 
@@ -127,10 +128,9 @@ Section UIP.
   Defined.
 
   (* Thanks Johannes! *)
-  Theorem le_unique_specialize_earlier : ∀ (n m : nat) (ha hb : le n m), ha = hb.
+  Fixpoint le_unique_specialize_earlier : ∀ (n m : nat) (ha hb : le n m), ha = hb.
   Proof.
-    refine(fix fn (n m : nat) (ha : le n m) {struct ha} : 
-      ∀ (hb : le n m), ha = hb := 
+    refine(fun n m ha =>
       match ha as ha' in le _ m' return ∀(pfa : m = m'), 
         ha = @eq_rect nat m' (fun w => le n w) ha' m (eq_sym pfa) -> 
         ∀ (hb : le n m'), ha' = hb 
@@ -158,7 +158,7 @@ Section UIP.
           abstract nia.  
     +
       (* here we have pfb, the structurally smaller value *)
-      specialize (fn _ _ pfb). 
+      specialize (le_unique_specialize_earlier _ _ pfb). 
       intros * hb hc.
       generalize dependent pfb.
       generalize dependent pfa.
@@ -180,10 +180,9 @@ Section UIP.
         f_equal. eapply hb. 
   Defined.  
 
-  Theorem le_unique_another : ∀ (n m : nat) (ha hb : le n m), ha = hb.
+  Fixpoint le_unique_another : ∀ (n m : nat) (ha hb : le n m), ha = hb.
   Proof.
-    refine(fix fn (n m : nat) (ha : le n m) {struct ha} : 
-      ∀ (hb : le n m), ha = hb := 
+    refine(fun n m ha =>
       match ha as ha' in le _ m' return ∀(pfa : m = m'), 
         ha = @eq_rect nat m' (fun w => le n w) ha' m (eq_sym pfa) -> 
         ∀ (hb : le n m'), ha' = hb 
@@ -208,7 +207,7 @@ Section UIP.
           intros pfc. subst.
           abstract nia.  
     +
-      specialize (fn _ _ pfb).
+      specialize (le_unique_another _ _ pfb).
       intros * hb hc.
       refine(match hc as hc' in _ ≤ (S mp) return ∀ (pf : mp = m'),
           le_S n mp (@eq_rect _ m' (fun w => n ≤ w) pfb mp (eq_sym pf)) = hc'
@@ -223,14 +222,13 @@ Section UIP.
           intros *. abstract nia.
       ++
         intros *. subst; cbn.
-        f_equal. eapply fn.
+        f_equal. eapply le_unique_another.
   Defined.
   
   
-  Theorem le_unique : ∀ (n m : nat) (ha hb : le n m), ha = hb.
+  Fixpoint le_unique : ∀ (n m : nat) (ha hb : le n m), ha = hb.
   Proof.
-    refine(fix fn (n m : nat) (ha : le n m) {struct ha} : 
-      ∀ (hb : le n m), ha = hb := 
+    refine(fun (n m : nat) (ha : le n m) =>
       match ha as ha' in le _ m' return ∀(pfa : m = m'), 
         ha = @eq_rect nat m' (fun w => le n w) ha' m (eq_sym pfa) -> 
         ∀ (hb : le n m'), ha' = hb 
@@ -257,7 +255,7 @@ Section UIP.
           intros pfc. subst.
           abstract nia.  
     +
-      specialize (fn _ _ pfb).
+      specialize (le_unique _ _ pfb).
       intros * hb hc. 
       generalize dependent pfb.
       generalize dependent pfa.
@@ -401,26 +399,26 @@ Section Hvect.
     end).
   Defined.
 
-  Definition hvect_nth_fin : ∀ {n : nat} {v : Vector.t Type n}, Hvect n v ->
+  Fixpoint hvect_nth_fin : ∀ {n : nat} {v : Vector.t Type n}, Hvect n v ->
     ∀ (f : Fin.t n), Vector.nth v f.
   Proof.
-    refine(fix fn (n : nat) (v : Vector.t Type n) 
-      (hv : Hvect n v) {struct hv} : forall (f : Fin.t n), v[@f] :=
+    refine(fun (n : nat) (v : Vector.t Type n) 
+      (hv : Hvect n v) =>
       match hv in Hvect n' v' return forall (f : Fin.t n'), v'[@f] 
       with
       | Hnil => fun f => match f with end 
       | @Hcons _ n' _ hvh hvt => fun (f : Fin.t (S n')) => _ 
       end).
     destruct (fin_inv _ f) as [ha | (f' & ha)]; subst; cbn;
-    [exact hvh | eapply fn; exact hvt]. 
+    [exact hvh | eapply hvect_nth_fin; exact hvt]. 
   Defined.
 
 
-  Definition hvect_nth_fin_ind : ∀ {n : nat} {v : Vector.t Type n}, Hvect n v ->
+  Fixpoint hvect_nth_fin_ind : ∀ {n : nat} {v : Vector.t Type n}, Hvect n v ->
     ∀ (f : Fin.t n), Vector.nth v f.
   Proof.
-    refine(fix fn (n : nat) (v : Vector.t Type n) 
-      (hv : Hvect n v) {struct hv} : forall (f : Fin.t n), v[@f] :=
+    refine(fun (n : nat) (v : Vector.t Type n) 
+      (hv : Hvect n v) =>
       match hv in Hvect n' v' return forall (f : Fin.t n'), v'[@f] 
       with
       | Hnil => fun f => match f with end 
@@ -438,7 +436,7 @@ Section Hvect.
         with 
         | Fin.F1 => fun _ _ => hvh
         | @Fin.FS nw fp => fun pfa fret => _
-        end eq_refl (fn _ vt hvt)). 
+        end eq_refl (hvect_nth_fin_ind _ vt hvt)). 
         cbn. 
         inversion pfa; subst; cbn.
         assert (ha : pfa = eq_refl) by 
@@ -450,11 +448,10 @@ Section Hvect.
   Eval compute in hvect_nth_fin_ind (Hcons true (Hcons 1 Hnil)) (FS F1).
 
   
-  Definition hvect_nth : ∀ {n : nat} (f : Fin.t n) 
+  Fixpoint hvect_nth : ∀ {n : nat} (f : Fin.t n) 
     {v : Vector.t Type n}, Hvect n v -> Vector.nth v f.
   Proof.
-    refine(fix fn {n : nat} (f : Fin.t n) {struct f} : 
-      ∀ (v : Vector.t Type n), Hvect n v → v[@f] := 
+    refine(fun  {n : nat} (f : Fin.t n) =>
       match f as f' in Fin.t n' return ∀ (v : Vector.t Type n'), 
         Hvect n' v → v[@f']
       with 
@@ -486,18 +483,17 @@ Section Hvect.
          | Hnil => fun _ => idProp
          | Hcons hvh hvt => fun pf => _ 
          end eq_refl); cbn.
-      eapply fn.
+      eapply hvect_nth.
       exact hvt. 
   Defined.  
 
   
   Eval compute in hvect_nth (FS F1) (Hcons true (Hcons 1 Hnil)).
   
-  Definition hvect_map : ∀  {n : nat} {va vb : Vector.t Type n}, Hvect n va ->
+  Fixpoint hvect_map : ∀  {n : nat} {va vb : Vector.t Type n}, Hvect n va ->
    (∀ (i : Fin.t n), Vector.nth va i -> Vector.nth vb i) -> Hvect n vb.
   Proof.
-    refine(fix fn n va vb hv {struct hv} : 
-      (∀ i : Fin.t n, va[@i] → vb[@i]) → Hvect n vb := 
+    refine(fun  n va vb hv =>
       match hv as hv' in Hvect n' va' return ∀ (pf : n = n'), 
         (∀ i : Fin.t n', va'[@i] → vb[@(eq_rec_r _ i pf)]) → 
         Hvect n' (@eq_rect _ n _ vb n' pf)
@@ -552,7 +548,7 @@ Section Hvect.
         | vbh :: vbt => fun pfa ha => _
         end eq_refl); inversion pfa; subst.
         refine (Hcons (ha Fin.F1 hvh) _).
-        eapply fn; [exact hvt | ]. 
+        eapply hvect_map; [exact hvt | ]. 
         intros i hi.
         assert (hc : pfa = eq_refl) by 
         (apply uip_nat).
@@ -560,18 +556,18 @@ Section Hvect.
         exact (ha (Fin.FS i) hi). 
   Defined.
 
-  Definition hvect_map_specialized : ∀  {n : nat} {va vb : Vector.t Type n}, Hvect n va ->
-   (∀ (i : Fin.t n), Vector.nth va i -> Vector.nth vb i) -> Hvect n vb.
+  Fixpoint hvect_map_specialized : ∀  {n : nat} {va vb : Vector.t Type n}, 
+    Hvect n va -> (∀ (i : Fin.t n), Vector.nth va i -> Vector.nth vb i) -> 
+    Hvect n vb.
   Proof.
-    refine(fix fn n va vb hv {struct hv} : 
-      (∀ i : Fin.t n, va[@i] → vb[@i]) → Hvect n vb := 
+    refine(fun n va vb hv => 
       match hv as hv' in Hvect n' va' return ∀ (pf : n = n'), 
         (∀ i : Fin.t n', va'[@i] → vb[@(eq_rec_r _ i pf)]) → 
         Hvect n' (@eq_rect _ n _ vb n' pf)
       with 
       | Hnil => _
       | @Hcons vah na vat hvh hvt => let ret := fun vb fi => 
-           fn na vat vb hvt fi in _   (* I instantiated the induction hypothesis here *)
+           hvect_map_specialized na vat vb hvt fi in _   (* I instantiated the induction hypothesis here *)
       end eq_refl).
     +
       intros * ha. 
@@ -593,7 +589,7 @@ Section Hvect.
         | _ => idProp
         end.
     +
-      clearbody ret; clear fn.
+      clearbody ret; clear hvect_map_specialized.
       intros * ha.
       generalize dependent va.
       generalize dependent vb.
@@ -631,12 +627,11 @@ Section Hvect.
 
 
   
-  Definition hvect_filter : ∀ {n : nat} {va : Vector.t Type n}, Hvect n va ->
+  Fixpoint hvect_filter : ∀ {n : nat} {va : Vector.t Type n}, Hvect n va ->
    (∀ (i : Fin.t n), Vector.nth va i -> bool) ->
    {m : nat & {vb : Vector.t Type m & Hvect m vb}}.
   Proof.
-    refine(fix fn (n : nat) (va : Vector.t Type n) (hv : Hvect n va) {struct hv} : 
-      (∀ i : t n, va[@i] -> bool) -> {m : nat & {vb : Vector.t Type m & Hvect m vb}} := 
+    refine(fun (n : nat) (va : Vector.t Type n) (hv : Hvect n va) =>
       match hv as hv' in Hvect n' va' return ∀ (pf : n = n'),
         ((∀ i : Fin.t n', va'[@i] -> bool) -> 
           {m : nat & {vb : Vector.t Type m & Hvect m vb}})
@@ -655,7 +650,7 @@ Section Hvect.
       assert (hc : (∀ i : Fin.t n0, t[@i] → bool)).
       intros i hi.
       exact (fi (Fin.FS i) hi).
-      destruct (fn _ t hvt hc) as (m & vb & hv').
+      destruct (hvect_filter _ t hvt hc) as (m & vb & hv').
       exists (S m), (T :: vb).
       exact (Hcons hvh hv').
     + 
@@ -663,43 +658,41 @@ Section Hvect.
       assert (hc : (∀ i : Fin.t n0, t[@i] → bool)).
       intros i hi.
       exact (fi (Fin.FS i) hi).
-      exact (fn _ t hvt hc).
+      exact (hvect_filter _ t hvt hc).
   Defined.
 
   
-  Definition fn_type : ∀ {n : nat}, Vector.t Type n -> forall (Acc : Type), Type.
+  Fixpoint fn_type : ∀ {n : nat}, Vector.t Type n -> forall (Acc : Type), Type.
   Proof.
-    refine(fix fn (n : nat) (va : Vector.t Type n) acc : Type := 
+    refine(fun (n : nat) (va : Vector.t Type n) acc =>
       match va as va' in Vector.t _ n' 
       with 
       | [] => acc -> acc
-      | vah :: vat => vah -> fn _ vat acc 
+      | vah :: vat => vah -> fn_type _ vat acc 
       end).
   Defined.
 
   
-  Definition hvect_fold : ∀ {n : nat} {va : Vector.t Type n}, 
+  Fixpoint hvect_fold : ∀ {n : nat} {va : Vector.t Type n}, 
     Hvect n va -> ∀ {Acc : Type}, fn_type va Acc -> Acc -> Acc.
   Proof.
-    refine(fix fn (n : nat) (va : Vector.t Type n) 
-      (hv : Hvect n va) {struct hv} : ∀ (Acc : Type), 
-        fn_type va Acc -> Acc -> Acc := 
+    refine(fun (n : nat) (va : Vector.t Type n) 
+      (hv : Hvect n va) =>
       match hv in Hvect n' va' return 
         ∀ (Acc : Type), fn_type va' Acc -> Acc -> Acc 
       with 
       | Hnil => fun _ f => f 
-      | Hcons hvh hvt => fun Acc fc => fn _ _ hvt _ (fc hvh) 
+      | Hcons hvh hvt => fun Acc fc => hvect_fold _ _ hvt _ (fc hvh) 
       end).
   Defined.
 
  
-  Definition hvect_zip : ∀ {n : nat} {va : Vector.t Type n},
+  Fixpoint hvect_zip : ∀ {n : nat} {va : Vector.t Type n},
     Hvect n va -> ∀ {vb : Vector.t Type n}, Hvect n vb -> 
     Hvect n (Vector.map2 prod va vb).
   Proof.
-     refine(fix fn (n : nat) (va : Vector.t Type n)
-      (hva : Hvect n va) {struct hva} : ∀ (vb : Vector.t Type n), 
-      Hvect n vb -> Hvect n (Vector.map2 prod va vb) :=
+     refine(fun (n : nat) (va : Vector.t Type n)
+      (hva : Hvect n va) =>
       match hva as hva' in Hvect n' va' return 
         ∀ (vb : Vector.t Type n'), Hvect n' vb -> Hvect n' (Vector.map2 prod va' vb)
       with 
@@ -735,23 +728,22 @@ Section Hvect.
         assert (hb : pf = eq_refl) by 
         (apply uip_nat).
         subst; cbn.
-        refine(Hcons (hvah, hvbh) (fn _ _ hvat _ hvbt)).
+        refine(Hcons (hvah, hvbh) (hvect_zip _ _ hvat _ hvbt)).
   Defined.
 
-  Definition hvect_zip_specialized {n : nat} {va vb : Vector.t Type n}
+  Fixpoint hvect_zip_specialized {n : nat} {va vb : Vector.t Type n}
     {hva : Hvect n va} (hvb : Hvect n vb) : Hvect n (Vector.map2 prod va vb).
   Proof.
     generalize dependent n.
-    refine(fix fn (n : nat) (va vb : Vector.t Type n)
-      (hva : Hvect n va) {struct hva} : Hvect n vb ->
-      Hvect n (Vector.map2 prod va vb) :=
+    refine(fun  (n : nat) (va vb : Vector.t Type n)
+      (hva : Hvect n va) =>
       match hva as hva' in Hvect n' va' return ∀ (pf : n = n'),
       (Hvect n' (@eq_rect _ n _ vb n' pf) ->
       Hvect n' (Vector.map2 prod va' (@eq_rect _ n _ vb n' pf)))
       with
       | Hnil => fun pf hvb => _
       | @Hcons vah na vat hvah hvat => fun pf hvb => 
-        let ret := fun vb hvbt => fn na vat vb hvat hvbt in _ 
+        let ret := fun vb hvbt => hvect_zip_specialized na vat vb hvat hvbt in _ 
       end eq_refl).
     +
       generalize dependent vb.
@@ -769,7 +761,7 @@ Section Hvect.
         | [] => Hnil
         end.
     +
-      clearbody ret. clear fn.
+      clearbody ret. clear hvect_zip_specialized.
       generalize dependent vb.
       rewrite pf. intros vb hvb.
       cbn in hvb.
@@ -807,12 +799,13 @@ Section Hvect.
     | Hcons hvah hvat => Hcons hvah (hvect_app hvat hvb)
     end.
 
-  Definition hvect_to_vect: ∀ {n : nat} {v : Vector.t Type n},
+  
+
+  Fixpoint hvect_to_vect : ∀ {n : nat} {v : Vector.t Type n},
     Hvect n v -> Vector.t (sigT (fun A => A)) n.
   Proof.
-    refine(fix fn (n : nat) (v : Vector.t Type n) 
-      (hv : Hvect n v) {struct hv}: 
-      Vector.t (sigT (fun A => A)) n := 
+    refine(fun (n : nat) (v : Vector.t Type n) 
+      (hv : Hvect n v) => 
       match hv as hv' in Hvect n' v' return 
         Vector.t (sigT (fun A => A)) n' 
       with 
@@ -821,31 +814,30 @@ Section Hvect.
       end).
     refine (@Vector.cons _ _ _ _).
     exists T. exact hvh.
-    eapply fn. exact hvt.
+    eapply hvect_to_vect. exact hvt.
   Defined.
 
-  Definition vect_to_hvect : ∀ {n : nat}, Vector.t (sigT (fun A => A)) n -> 
+  Fixpoint vect_to_hvect : ∀ {n : nat}, Vector.t (sigT (fun A => A)) n -> 
     {v : Vector.t Type n &  Hvect n v}.
   Proof.
-    refine(fix fn (n : nat) (v : Vector.t (sigT (fun A => A)) n) {struct v} : 
-       {u : Vector.t Type n &  Hvect n u} := 
+    refine(fun (n : nat) (v : Vector.t (sigT (fun A => A)) n) =>
        match v as v' in Vector.t _ n' return 
         {u : Vector.t Type n' &  Hvect n' u} 
       with 
       | [] => existT _ [] Hnil
       | vh :: vt => _
       end).
-    destruct (fn _ vt) as (u & hv).
+    destruct (vect_to_hvect _ vt) as (u & hv).
     destruct vh as (vhh & vht).
     exists (vhh :: u).
     exact (Hcons vht hv). 
   Defined.
 
-  Definition hvect_to_fin : ∀ {n : nat} {v : Vector.t Type n}, 
+  Fixpoint hvect_to_fin : ∀ {n : nat} {v : Vector.t Type n}, 
     Hvect n v -> ∀ (f : Fin.t n), Vector.nth v f.
   Proof.
-    refine(fix fn (n : nat) (v : Vector.t Type n)
-      (hv : Hvect n v) {struct hv} : ∀ (f : Fin.t n), Vector.nth v f := 
+    refine(fun (n : nat) (v : Vector.t Type n)
+      (hv : Hvect n v) =>
       match hv as hv' in Hvect n' v' return 
         ∀ (f : Fin.t n'), Vector.nth v' f
       with 
@@ -869,14 +861,13 @@ Section Hvect.
       assert (hb : pf = eq_refl) by 
       (apply uip_nat).
       subst; cbn.
-      eapply fn. exact hvt.
+      eapply hvect_to_fin. exact hvt.
   Defined.
 
-  Definition fin_to_hvect : ∀ {n : nat} {v : Vector.t Type n}, 
+  Fixpoint fin_to_hvect : ∀ {n : nat} {v : Vector.t Type n}, 
     (∀ (f : Fin.t n), Vector.nth v f) -> Hvect n v.
   Proof.
-    refine(fix fn (n : nat) {struct n} : ∀ (v : Vector.t Type n), 
-    (∀ (f : Fin.t n), Vector.nth v f) -> Hvect n v := 
+    refine(fun (n : nat) => 
     match n as n' in nat return ∀ (pf : n = n') (v : Vector.t Type n'), 
     (∀ (f : Fin.t n'), Vector.nth v f) -> Hvect n' v 
     with 
@@ -910,7 +901,7 @@ Section Hvect.
         eapply eq_sym in ha.
         inversion ha; subst.
         refine (Hcons (f Fin.F1) _).
-        eapply fn. intro i.
+        eapply fin_to_hvect. intro i.
         exact (f (Fin.FS i)).
   Defined.
 
@@ -995,18 +986,15 @@ Section Hvect.
       end). 
   Defined.
 
-  Theorem hvec_update {n : nat} {v : Vector.t Type n} {nt : Type}
+  Fixpoint hvec_update {n : nat} {v : Vector.t Type n} {nt : Type}
     (hv : Hvect n v) (i : Fin.t n) (e : nt) : Hvect n (Vector.replace v i nt).
   Proof.
-    generalize dependent n.
-    refine(fix fn (n : nat) (v : Vector.t Type n) (hv : Hvect n v) : 
-      ∀ i : Fin.t n, Hvect n (replace v i nt) := 
-      match hv as hv' in Hvect n' v' return 
+    refine(match hv as hv' in Hvect n' v' return 
         ∀ i' : Fin.t n', Hvect n' (replace v' i' nt) 
       with
       | Hnil => fun f => match f with end
-      | @Hcons vh ne vt hvh hvt => let ret := fn ne vt hvt in fun f => _ 
-      end); clearbody ret; clear fn.
+      | @Hcons vh ne vt hvh hvt => let ret := hvec_update ne vt nt hvt in fun f => _ 
+      end i); clearbody ret; clear hvec_update.
     refine
       (match f as f' in Fin.t n' return ∀ (pf : S ne = n'),
         (match n' as n'' return Type -> Vector.t Type (Nat.pred n'') -> 
@@ -1020,7 +1008,7 @@ Section Hvect.
       with
       | Fin.F1 => _ 
       | @Fin.FS nw f' => _ 
-      end eq_refl); cbn.
+      end eq_refl). 
     +
       intros *. 
       inversion pf as [pfa]; subst.
@@ -1034,10 +1022,95 @@ Section Hvect.
       assert (ha : pf = eq_refl) by 
       (apply uip_nat). 
       subst; cbn.
-      refine(Hcons hvh (ret f')).
+      refine(Hcons hvh (ret f' e)).
   Defined.
 
+ 
+
+  Fixpoint hvect_split : ∀ {n m : nat} {va : Vector.t Type n} 
+    {vb : Vector.t Type m},  Hvect (n + m) (Vector.append va vb) -> 
+    Hvect n va * Hvect m vb.
+  Proof.
+    refine(fun (n : nat) =>
+      match n as n' return ∀ (m : nat) (va : Vector.t Type n') 
+      (vb : Vector.t Type m), Hvect (n' + m) (va ++ vb) → Hvect n' va * Hvect m vb 
+      with 
+      | 0 => _ 
+      | S n' => let ret := hvect_split n' in _ 
+      end); try (clearbody ret); try (clear hvect_split).
+    +
+      intros *.
+      refine
+        (match va as va' in Vector.t _ n' return 
+          (match n' as n'' return Vector.t Type n'' -> Type 
+          with 
+          | 0 => fun e => Hvect m (e ++ vb) -> (Hvect 0 e * Hvect m vb)%type
+          | _ => fun _ => IDProp
+          end va')
+        with 
+        | [] => _
+        end).
+      intro ha.
+      refine(Hnil, ha).
+    +
+      intros *.
+      refine
+        (match va as va' in Vector.t _ nw return ∀ (pf : S n' = nw),
+          (match nw as n'' return Vector.t Type n'' -> Type 
+          with 
+          | 0 => fun _ => IDProp 
+          | S n'' => fun e => Hvect (S (n'' + m)) (e ++ vb) → 
+            Hvect (S n'') e * Hvect m vb
+          end va')
+        with 
+        | [] => fun _ => idProp
+        | vah :: vat => _
+        end eq_refl). 
+      intros pf ha.
+      eapply eq_sym in pf.
+      inversion pf as [pfa]; subst.
+      cbn in ha.
+      pose proof (hvect_head ha) as hb. cbn in hb.
+      pose proof (hvect_tail ha) as hc. cbn in hc.
+      destruct (ret _ vat vb hc) as (hl & hr).
+      refine(Hcons hb hl, hr).
+  Defined.
+
+
+
+  Fixpoint hvect_shift {n : nat} {vh : Type} {v : Vector.t Type n} :
+    Hvect (n + 1) (v ++ [vh]) -> Hvect (S n) (VectorDef.shiftin vh v).
+  Proof.
+
+
     
+    
+
+  Admitted.
+
+  Fixpoint hvect_rev {n : nat} {v : Vector.t Type n} 
+    (hv : Hvect n v) : Hvect n (Vector.rev v).
+  Proof.
+    refine
+      (match hv as hv' in Hvect n' v' return Hvect n' (Vector.rev v')
+      with 
+      | Hnil => _ 
+      | @Hcons vh ne vt hvh hvt => let ret := hvect_rev ne vt hvt in _ 
+      end). 
+    + 
+      rewrite VectorSpec.rev_nil.
+      exact Hnil.
+    +
+      clearbody ret.
+      clear hvect_rev. 
+      rewrite VectorSpec.rev_cons. 
+      eapply hvect_shift.
+      refine(hvect_app ret (Hcons hvh Hnil)).
+  Defined.
+
+
+
+      
       
 End Hvect.
 
