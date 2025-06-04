@@ -926,11 +926,11 @@ Section Hvect.
         | S n'' => Vector.t A n''
         end)
       with
-      | [] => idProp 
       | vh :: vt => vt 
       end). 
   Defined.
 
+  
   Definition vector_head {A : Type} {n : nat} : 
     Vector.t A (S n) -> A.
   Proof.
@@ -943,9 +943,8 @@ Section Hvect.
         | S n'' => A 
         end)
       with
-      | [] => idProp 
       | vh :: _ => vh 
-      end).
+      end). 
   Defined. 
 
 
@@ -953,7 +952,7 @@ Section Hvect.
     (hvha hvhb : vh) (hvta hvtb : Hvect n vt), 
     Hcons hvha hvta = Hcons hvhb hvtb -> hvha = hvhb.
   Proof.
-    intros * ha. 
+    intros * ha.
     refine
       (match ha as ha' in _ = hv'  return 
         (match hv' in Hvect n' v' return 
@@ -965,7 +964,7 @@ Section Hvect.
           end v') 
         with 
         | Hnil => IDProp
-        | Hcons hvh' _ => fun e => e = hvh' 
+        | @Hcons vh' ne vt' hvh' hvt' => fun (e : vh') => e = hvh' 
         end hvha)
       with 
       | eq_refl => eq_refl 
@@ -996,7 +995,49 @@ Section Hvect.
       end). 
   Defined.
 
+  Theorem hvec_update {n : nat} {v : Vector.t Type n} {nt : Type}
+    (hv : Hvect n v) (i : Fin.t n) (e : nt) : Hvect n (Vector.replace v i nt).
+  Proof.
+    generalize dependent n.
+    refine(fix fn (n : nat) (v : Vector.t Type n) (hv : Hvect n v) : 
+      ∀ i : Fin.t n, Hvect n (replace v i nt) := 
+      match hv as hv' in Hvect n' v' return 
+        ∀ i' : Fin.t n', Hvect n' (replace v' i' nt) 
+      with
+      | Hnil => fun f => match f with end
+      | @Hcons vh ne vt hvh hvt => let ret := fn ne vt hvt in fun f => _ 
+      end); clearbody ret; clear fn.
+    refine
+      (match f as f' in Fin.t n' return ∀ (pf : S ne = n'),
+        (match n' as n'' return Type -> Vector.t Type (Nat.pred n'') -> 
+          Fin.t n'' -> Type 
+        with 
+        | 0 => fun _ _ _  => IDProp
+        | S n'' => fun vha vta fa =>  Hvect (S n'') 
+          (replace (vha :: vta) fa nt)
+        end vh (@eq_rect _ (S ne) (fun w => Vector.t Type (Nat.pred w)) vt 
+          n' pf) f')
+      with
+      | Fin.F1 => _ 
+      | @Fin.FS nw f' => _ 
+      end eq_refl); cbn.
+    +
+      intros *. 
+      inversion pf as [pfa]; subst.
+      assert (ha : pf = eq_refl) by 
+      (apply uip_nat). 
+      subst; cbn.
+      refine(Hcons e hvt).
+    +
+      intros *.
+      inversion pf as [pfa]; subst.
+      assert (ha : pf = eq_refl) by 
+      (apply uip_nat). 
+      subst; cbn.
+      refine(Hcons hvh (ret f')).
+  Defined.
 
+    
       
 End Hvect.
 
