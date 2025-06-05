@@ -1076,17 +1076,60 @@ Section Hvect.
       refine(Hcons hb hl, hr).
   Defined.
 
-
+  Fixpoint hvect_shiftin {n : nat} {v : Vector.t Type n} {nt : Type}
+    (vh : nt) (hv : Hvect n v)  : Hvect (S n) (VectorDef.shiftin nt v).
+  Proof.
+  Admitted.
+    
 
   Fixpoint hvect_shift {n : nat} {vh : Type} {v : Vector.t Type n} :
     Hvect (n + 1) (v ++ [vh]) -> Hvect (S n) (VectorDef.shiftin vh v).
   Proof.
+    revert v.
+    refine
+      (match n as n' in nat return  ∀ (v : Vector.t Type n'), 
+        Hvect (n' + 1) (v ++ [vh]) → Hvect (S n') (VectorDef.shiftin vh v)
+      with 
+      | 0 => _ 
+      | S n' => let ret := hvect_shift n' in _
+      end); try (clearbody ret); try (clear hvect_shift).
+    +
+      intros v.
+      refine
+        (match v as v' in Vector.t _ n' return 
+          (match n' as n'' return Vector.t Type n'' -> Type 
+          with 
+          | 0 => fun e => Hvect (0 + 1) (e ++ [vh]) -> Hvect 1 (VectorDef.shiftin vh e)
+          | _ => fun _ => IDProp
+          end v')
+        with 
+        | [] => fun x => x
+        end).
+    +
+      intro v.
+      refine
+        (match v as v' in Vector.t _ nw return S n' = nw ->
+          (match nw as n'' return Vector.t Type n'' -> Type 
+          with 
+          | 0 => fun _ => IDProp
+          | S nw' => fun e => Hvect (S nw' + 1) (e ++ [vh]) → Hvect (S (S nw')) (VectorDef.shiftin vh e)
+          end v')
+      with 
+      | [] => fun _ => idProp
+      | vhh :: vtt => _
+      end eq_refl).
+      cbn.
+      intros ha vt.
+      eapply eq_sym in ha.
+      inversion ha; subst.
+      clear ha. 
+      pose proof (hvect_head vt) as ha.
+      pose proof (hvect_tail vt) as hb.
+      cbn in ha, hb.
+      specialize(ret vh vtt hb).
+      refine(Hcons ha ret).
+  Defined.
 
-
-    
-    
-
-  Admitted.
 
   Fixpoint hvect_rev {n : nat} {v : Vector.t Type n} 
     (hv : Hvect n v) : Hvect n (Vector.rev v).
@@ -1108,9 +1151,6 @@ Section Hvect.
       refine(hvect_app ret (Hcons hvh Hnil)).
   Defined.
 
-
-
-      
       
 End Hvect.
 
