@@ -1077,9 +1077,18 @@ Section Hvect.
   Defined.
 
   Fixpoint hvect_shiftin {n : nat} {v : Vector.t Type n} {nt : Type}
-    (vh : nt) (hv : Hvect n v)  : Hvect (S n) (VectorDef.shiftin nt v).
+    (vha : nt) (hv : Hvect n v) : Hvect (S n) (VectorDef.shiftin nt v).
   Proof.
-  Admitted.
+    refine
+      (match hv as hv' in Hvect n' v' return 
+         Hvect (S n') (VectorDef.shiftin nt v')
+      with 
+      | Hnil => Hcons vha Hnil
+      | @Hcons vh ne vt hvh hvt => 
+        let ret := hvect_shiftin ne vt nt vha hvt in _
+      end); try (clearbody ret; clear hvect_shiftin).
+      refine(Hcons hvh ret).
+  Defined.
     
 
   Fixpoint hvect_shift {n : nat} {vh : Type} {v : Vector.t Type n} :
@@ -1140,12 +1149,12 @@ Section Hvect.
       | Hnil => _ 
       | @Hcons vh ne vt hvh hvt => let ret := hvect_rev ne vt hvt in _ 
       end). 
-    + 
+    +
       rewrite VectorSpec.rev_nil.
       exact Hnil.
     +
       clearbody ret.
-      clear hvect_rev. 
+      clear hvect_rev.  
       rewrite VectorSpec.rev_cons. 
       eapply hvect_shift.
       refine(hvect_app ret (Hcons hvh Hnil)).
@@ -1193,6 +1202,7 @@ Section Test.
   Eval compute in hvect_to_vect hva.
   Eval compute in  vect_to_hvect (hvect_to_vect hva).
   Eval compute in hvect_to_fin hvc (FS F1).
+  Eval compute in hvect_rev hvc.
 
 End Test.
 
