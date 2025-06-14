@@ -2,7 +2,8 @@
   Psatz.
  Import VectorNotations EqNotations.
 
- Section Rev.
+Module Rev.
+Section Rev.
 
   Context {A : Type}.
 
@@ -205,3 +206,124 @@
   Qed.
 
 End Rev.
+End Rev.
+
+
+Module EQRev.
+  Section EQRev.
+
+    Context {A : Type}.
+
+    Fixpoint vector_rev {n : nat} (v : Vector.t A n) : Vector.t A n.
+    Proof.
+      refine
+        match v as v' in Vector.t _ n' return Vector.t A n'
+        with 
+        | [] => []
+        | @Vector.cons _ vh nw vt =>
+            rew dependent [fun y p => Vector.t A y] (Nat.add_1_r nw) in 
+            (vector_rev _ vt ++ [vh]) 
+        end.
+    Defined.
+
+
+  Lemma rew_cons {n} (h : A) (t : Vector.t A n) {m} (e : n = m) :
+    rew dependent [fun y p => Vector.t A y] (f_equal S e) in (h :: t) =
+    h :: (rew dependent [fun y p => Vector.t A y] e in t).
+  Proof.
+    destruct e; reflexivity.
+  Defined.
+
+  Lemma proof_irr : ∀ (n : nat), (Nat.add_1_r (S n)) = (f_equal S (Nat.add_1_r n)).
+  Proof.
+    intros.
+    apply Eqdep_dec.UIP_dec, eq_nat_dec.
+  Qed.
+
+
+  Theorem vector_app_assoc  : forall (n : nat)
+    (vn : Vector.t A n), forall (m : nat) (vm : Vector.t A m),
+    forall (r : nat) (vr : Vector.t A r),
+    forall (e : n + (m + r) =  n + m + r),
+    (vn ++ vm) ++ vr = rew dependent [fun y p => Vector.t A y] e in 
+    (vn ++ (vm ++ vr)).
+  Proof.
+    intros n vn.
+    induction vn.
+    + intros. cbn. 
+      assert (e = eq_refl).
+      eapply Eqdep_dec.UIP_dec, eq_nat_dec.
+      subst. cbn. reflexivity.
+    +
+      intros. cbn in e |- *.
+      inversion e as [ea].
+      replace e with (f_equal S ea) by 
+      (apply Eqdep_dec.UIP_dec, eq_nat_dec).
+      rewrite rew_cons.
+      f_equal. eapply IHvn.
+  Qed.
+
+  Theorem rew_dep_rewrite {m n : nat} (e : m = n) (v : Vector.t A m) : 
+    rew dependent <- [fun y _ => Vector.t A y] e in
+    rew dependent [fun u _ => Vector.t A u] e in v = v.
+  Proof.
+    refine
+      match e with 
+      | eq_refl => eq_refl
+      end.
+  Qed.
+  
+  Theorem vector_app_assoc_dual  : forall (n : nat)
+    (vn : Vector.t A n), forall (m : nat) (vm : Vector.t A m),
+    forall (r : nat) (vr : Vector.t A r),
+    forall (e : n + (m + r) =  n + m + r),
+    rew dependent <- [fun y p => Vector.t A y] 
+    e in ((vn ++ vm) ++ vr) = 
+    (vn ++ (vm ++ vr)).
+  Proof.
+    intros *.
+    pose proof (vector_app_assoc n vn m vm r vr e) as ha.
+    pose proof (f_equal (fun x => rew dependent eq_sym e in x) ha) as hb.
+    cbn in hb. rewrite ha.
+    rewrite rew_dep_rewrite.
+    reflexivity.
+  Qed.
+
+  Fixpoint rev_app_emp : ∀ (m : nat) (v : Vector.t A m),
+    rew dependent [fun y _ => Vector.t A y] Nat.add_comm m 0 in (v ++ []) = v.
+  Proof.
+    intros n v.
+    destruct v as [|vh n vt].
+    + cbn. 
+      assert (ha : Nat.add_comm 0 0 = eq_refl) by 
+      (eapply Eqdep_dec.UIP_dec, eq_nat_dec).
+      rewrite ha. reflexivity.
+    +
+      cbn. 
+      specialize (rev_app_emp _ vt).
+      replace (Nat.add_comm (S n) 0) with 
+      (f_equal S (Nat.add_comm n 0)) by 
+      (apply Eqdep_dec.UIP_dec, eq_nat_dec).
+      rewrite rew_cons. f_equal.
+      rewrite rev_app_emp. 
+      exact eq_refl.
+  Qed.
+
+
+  Lemma rew_app {n m k} (v : Vector.t A n) (w : Vector.t A k) (e : n = m) :
+    rew dependent [fun y _ => Vector.t A y] (f_equal (fun x => x + k) e) in (v ++ w) =
+    (rew dependent [fun y _ => Vector.t A y] e in v) ++ w.
+  Proof.
+    destruct e; reflexivity.
+  Defined.
+
+  Lemma rew_app_aux {n m k} (v : Vector.t A n) (w : Vector.t A k) (e : k = m) :
+    rew dependent [fun y _ => Vector.t A y] (f_equal (fun x => n + x) e) in (v ++ w) =
+    (v ++ rew dependent [fun y _ => Vector.t A y]  e in w).
+  Proof.
+    destruct e; reflexivity.
+  Defined.
+
+  End EQRev.
+End EQRev.
+
