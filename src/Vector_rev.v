@@ -1,11 +1,20 @@
- From Stdlib Require Import Utf8 Vector PeanoNat Peano_dec 
+From Stdlib Require Import Utf8 Vector PeanoNat Peano_dec 
   Psatz.
- Import VectorNotations EqNotations.
+Import VectorNotations EqNotations.
 
+ 
 Module Rev.
 Section Rev.
 
   Context {A : Type}.
+
+  Lemma invert_eq_rect {x y} (P : A -> Type) (hb : x = y) (ha : P x) (hc : P y) :
+    hc = rew [P] hb in ha → ha = rew <- [P] hb in hc.
+  Proof.
+    intros * hd.
+    rewrite hd, rew_opp_l.
+    reflexivity.
+  Defined.
 
   Fixpoint vector_rev {n : nat} (v : Vector.t A n) : Vector.t A n.
   Proof.
@@ -60,15 +69,12 @@ Section Rev.
     (vn : Vector.t A n), forall (m : nat) (vm : Vector.t A m),
     forall (r : nat) (vr : Vector.t A r),
     forall (e : n + (m + r) =  n + m + r),
-    rew [Vector.t A] (eq_sym e) in ((vn ++ vm) ++ vr) = 
+    rew <- [Vector.t A] e in ((vn ++ vm) ++ vr) = 
     (vn ++ (vm ++ vr)).
   Proof.
     intros *.
     pose proof (vector_app_assoc n vn m vm r vr e) as ha.
-    pose proof (f_equal (fun x => rew [t A] eq_sym e in x) ha) as hb.
-    cbn in hb. rewrite rew_compose, eq_trans_sym_inv_r in hb.
-    cbn in hb.
-    rewrite hb.
+    rewrite ha, rew_opp_l. 
     exact eq_refl.
   Qed.
 
@@ -135,18 +141,13 @@ Section Rev.
 
   Theorem rev_app_dual : forall (n : nat) (va : Vector.t A n) 
     (m : nat) (vb : Vector.t A m), 
-    (vector_rev vb ++ vector_rev va) = rew [Vector.t A] (eq_sym (Nat.add_comm m n)) in 
+    (vector_rev vb ++ vector_rev va) = rew <- [Vector.t A] (Nat.add_comm m n) in 
     vector_rev (va ++ vb).
   Proof.
     intros *.
     pose proof (rev_app n va m vb) as ha.
-    pose proof (f_equal (fun x => rew [Vector.t A] (eq_sym (Nat.add_comm m n)) in x) ha) 
-    as hb.
-    cbn in hb.
-    rewrite rew_compose in hb.
-    rewrite eq_trans_sym_inv_r in hb.
-    cbn in hb |- *.
-    rewrite hb. exact eq_refl.
+    rewrite ha, rew_opp_l. 
+    exact eq_refl.
   Qed.
   
 
@@ -177,7 +178,6 @@ Section Rev.
       f_equal. 
       apply Eqdep_dec.UIP_dec, eq_nat_dec.
   Qed.
-
 
 
   Lemma transport_shiftin n (v : Vector.t A n) (e : n = n) :
@@ -326,4 +326,4 @@ Module EQRev.
 
   End EQRev.
 End EQRev.
-
+  
