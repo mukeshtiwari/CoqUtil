@@ -31,8 +31,7 @@ Proof.
 
 (* another one *)
 
- 
-Lemma some_DepRec_lemma (r : DepRec) (f : DepRec -> Prop) : f r.
+ Lemma some_DepRec_lemma (r : DepRec) (f : DepRec -> Prop) : f r.
 Proof.
   destruct r as [r ha].
   unfold someListProp in *.
@@ -47,9 +46,7 @@ Proof.
   set(hc := (eq_rect _ fn ha _ hb)).
   assert (hd : ha = eq_rect o fn hc (nth_error r 10) (eq_sym hb)).
   subst hc. rewrite rew_compose, eq_trans_sym_inv_r.
-  cbn; reflexivity.
-  replace ha with (eq_rect o fn hc (nth_error r 10) (eq_sym hb)).
-  clearbody hc. clear hd. 
+  cbn; reflexivity. rewrite hd. clear hd.
+  clearbody hc. 
   rewrite hb in ha.
   destruct o.
-  
