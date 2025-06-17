@@ -1,3 +1,12 @@
+Lemma invert_eq_rect {A} {x y} (P : A -> Type) (hb : x = y) (ha : P x) :
+  let hc := eq_rect x P ha y hb in
+  ha = eq_rect_r P hc hb.
+Proof.
+  destruct hb; simpl. 
+  unfold eq_rect_r; simpl.
+  reflexivity.
+Defined.
+
 
   Definition someListProp (l : list nat) : Prop:=
         match nth_error l 10  with
