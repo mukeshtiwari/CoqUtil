@@ -2,7 +2,6 @@ From Stdlib Require Import Utf8 Vector PeanoNat Peano_dec
   Psatz.
 Import VectorNotations EqNotations.
 
- 
 Module Rev.
 Section Rev.
 
@@ -197,12 +196,7 @@ Section Rev.
       rewrite rew_push_out.
       rewrite rev_app.
       cbn. rewrite vector_rev_rev.
-      rewrite rew_compose.
-      assert (ha : Nat.add_1_r 0 = eq_refl) by 
-      (apply Eqdep_dec.UIP_dec, eq_nat_dec).
-      rewrite ha. cbn.
-      rewrite transport_shiftin.
-      reflexivity.
+      now rewrite rew_compose, !transport_shiftin.
   Qed.
 
 End Rev.
@@ -326,4 +320,3 @@ Module EQRev.
 
   End EQRev.
 End EQRev.
-  
