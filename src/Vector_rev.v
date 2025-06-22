@@ -2,6 +2,9 @@ From Stdlib Require Import Utf8 Vector PeanoNat Peano_dec
   Psatz.
 Import VectorNotations EqNotations.
 
+
+
+
 Module Rev.
 Section Rev.
 
@@ -14,6 +17,19 @@ Section Rev.
     rewrite hd, rew_opp_l.
     reflexivity.
   Defined.
+
+  Lemma invert_eq_rect_eq {x y} (P : A -> Type) (hb : x = y) (ha : P x) (hc : P y) :
+    hc = rew [P] hb in ha → ha = rew <- [P] hb in hc.
+  Proof.
+    revert ha hc. 
+    refine(
+      match hb as hb' in _ = y' return
+        ∀ (ha : P x) (hc : P y'), hc = rew [P] hb' in ha → ha = rew <- [P] hb' in hc
+      with 
+      | eq_refl => fun ha hc hd => _ 
+      end). cbn in hd |- *.
+      exact (eq_sym hd).
+  Qed.
 
   Fixpoint vector_rev {n : nat} (v : Vector.t A n) : Vector.t A n.
   Proof.
