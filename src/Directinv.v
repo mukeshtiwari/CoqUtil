@@ -291,3 +291,47 @@ Proof.
     | eq_refl => eq_refl
     end.
 Defined.
+
+
+Theorem vector_inv {A : Type} : ∀ (n : nat) (v : Vector.t A n), 
+  match n as n' return Vector.t _ n' -> Type 
+  with 
+  | 0 => fun e => e = []
+  | S n'' => fun e => {vh : A & {vt : Vector.t A n'' | e = vh :: vt}}
+  end v.
+Proof.
+  intros n v.
+  refine
+  (match v as v' in Vector.t _ n'
+    return
+    (match n' return Vector.t _ n' -> Type 
+    with 
+    | 0 => fun e => e = [] 
+    | S n'' => fun e => {vh : A & {vt : Vector.t A n'' | e = vh :: vt}}
+    end v')
+  with 
+  | [] => eq_refl
+  | vh :: vt => existT _ vh (exist _ vt eq_refl)
+  end).
+Defined.
+
+
+
+Theorem fin_inv : ∀ (n : nat) (f : Fin.t (S n)), 
+  (f = @Fin.F1 n) + {u : Fin.t n | f = Fin.FS u}.
+Proof.
+  intros n f.
+  refine
+  (match f as f' in Fin.t n' return 
+    (match n' as nw return Fin.t nw -> Type 
+    with
+    | 0 => fun _ => IDProp 
+    | S n'' => fun (ft : Fin.t (S n'')) => 
+      ((ft = @Fin.F1 n'') + {u : Fin.t n'' | ft = Fin.FS u})%type
+    end f')
+  with 
+  | Fin.F1 => inl eq_refl
+  | Fin.FS fr => inr (exist _ fr eq_refl)
+  end).
+Defined.
+
