@@ -193,3 +193,59 @@ Section UIP.
         intros *. subst; cbn.
         f_equal. eapply fn.
   Defined.
+
+
+(* this one works *)
+  Theorem le_unique_fail : ∀ (n m : nat) (ha hb : le n m), ha = hb.
+  Proof.
+    refine(fix fn (n m : nat) (ha : le n m) {struct ha} :
+      ∀ (hb : le n m), ha = hb :=
+      match ha as ha' in le _ m' return ∀(pfa : m = m'),
+        ha = @eq_rect nat m' (fun w => le n w) ha' m (eq_sym pfa) ->
+        ∀ (hb : le n m'), ha' = hb
+      with
+      | le_n _ =>  _
+      | le_S _ m' pfb => _
+      end eq_refl eq_refl).
+    +
+      intros * hb hc.
+      generalize dependent hc.
+      refine(fun hc =>
+        match hc as hc' in _ ≤ n' return ∀ (pfb : n = n'),
+          le_n n' = @eq_rect _ n (fun w => w ≤ n') hc' n' pfb
+        with
+        | le_n _ => _
+        | le_S _ nw pfb => _
+        end eq_refl).
+        ++
+          intros *.
+          assert (hd : pfb = eq_refl) by
+          (apply uip_nat).
+          subst; cbn; exact eq_refl.
+        ++
+          intros pfc. subst.
+          abstract nia.
+    + (* here we have pfb, the structurally smaller value *)
+      specialize (fn _ _ pfb).
+      Guarded.
+      intros * hb hc.
+      generalize dependent pfb.
+      generalize dependent pfa.
+      generalize dependent hc.
+      refine(fun hc =>
+        match hc as hc' in _ ≤ (S mp) return ∀ (pf : mp = m') pfa pfb fn hb,
+          le_S n mp (@eq_rect _ m' (fun w => n ≤ w) pfb mp (eq_sym pf)) = hc'
+        with
+        | le_n _ => _
+        | le_S _ nw pfc => _
+        end eq_refl).
+      ++
+        destruct n as [| n].
+        +++ exact idProp.
+        +++
+          intros * hb. abstract nia.
+      ++
+        intros * fn hb. subst; cbn.
+        f_equal. eapply fn.
+  Defined.
+
