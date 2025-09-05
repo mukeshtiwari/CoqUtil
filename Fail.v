@@ -1,5 +1,4 @@
-From Stdlib Require Import Utf8 Vector Fin Psatz.
-Import VectorNotations.
+From Stdlib Require Import Utf8 Psatz.
 
 Section UIP.
 
@@ -39,6 +38,48 @@ Section UIP.
         | eq_refl => eq_refl
         end).
   Defined.
+
+
+  Scheme le_dep_ind := Induction for le Sort Prop.
+ 
+  Theorem le_unique_ind : ∀ (n m : nat) (ha hb : le n m), ha = hb.
+  Proof.
+    induction ha using le_dep_ind.
+    +
+      refine(fun hc =>
+        match hc as hc' in _ ≤ n' return ∀ (pfb : n = n'),
+          le_n n' = @eq_rect _ n (fun w => w ≤ n') hc' n' pfb
+        with
+        | le_n _ => _
+        | le_S _ nw pfb => _
+        end eq_refl).
+      ++
+        intros *.
+        pose proof (uip_nat n pfb) as ha.
+        rewrite ha. exact eq_refl.
+      ++
+        intros pfc.
+        nia.
+    +
+      refine(fun hb =>
+        match hb as hb' in _ ≤ mp return ∀ (pf : mp = S m),
+          le_S n m ha = @eq_rect _ mp (fun w => n <= w) hb' (S m) pf 
+        with
+        | le_n _ => _
+        | le_S _ nw pfc => _
+        end eq_refl).
+      ++
+        intros *.
+        nia.
+      ++
+        intros *.
+        inversion pf as [pf']; subst.
+        pose proof (uip_nat _ pf) as hc.
+        rewrite hc. cbn. 
+        erewrite IHha. eapply f_equal.
+        exact eq_refl.
+  Defined.
+
 
 
   Theorem le_unique_fail : ∀ (n m : nat) (ha hb : le n m), ha = hb.
@@ -249,4 +290,5 @@ Section UIP.
         f_equal. eapply fn.
   Defined.
 
+ 
 End UIP.
