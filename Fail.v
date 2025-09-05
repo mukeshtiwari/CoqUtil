@@ -195,8 +195,8 @@ Section UIP.
   Defined.
 
 
-(* this one works *)
-  Theorem le_unique_fail : ∀ (n m : nat) (ha hb : le n m), ha = hb.
+  (* this one works *)
+  Theorem le_unique_fn_earlier : ∀ (n m : nat) (ha hb : le n m), ha = hb.
   Proof.
     refine(fix fn (n m : nat) (ha : le n m) {struct ha} :
       ∀ (hb : le n m), ha = hb :=
@@ -249,3 +249,4 @@ Section UIP.
         f_equal. eapply fn.
   Defined.
 
+End UIP.
