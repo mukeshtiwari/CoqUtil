@@ -35,3 +35,24 @@ Proof.
   eapply Classical_Prop.proof_irrelevance.
   congruence.
 Qed.
+
+(* using generalisation *)
+Lemma oStar_perm_choiceTT : 
+  forall (T : finType) (u : {set T}) (o : T) (o2 : {o | o \in u}) (ot : o \in u),
+  o = sval ((if o \in u as y return ((o \in u) = y → {o : T | o \in u})
+             then [eta exist (λ o : T, o \in u) o]
+             else fun=> o2)
+              (erefl (o \in u))).
+Proof.
+  move=> T u o.
+  case=> o2 p ou.
+  have foo : o = sval (exist (fun o => o \in u) o ou) by [].
+  rewrite [LHS]foo.
+  apply/eq_sig_hprop_iff => /=; first by move=> x; 
+  apply: Classical_Prop.proof_irrelevance.
+  generalize (erefl (o \in u)).
+  generalize ((o \in u)) at 2 3.
+  intros *. destruct b; 
+  [eapply f_equal, Classical_Prop.proof_irrelevance | 
+  congruence].
+Qed.
