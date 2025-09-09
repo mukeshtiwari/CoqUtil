@@ -1,5 +1,3 @@
-
-
 From Coq Require Import Init.Prelude Unicode.Utf8.
 From mathcomp Require Import all_ssreflect.
 
@@ -27,13 +25,13 @@ Proof.
     (if b as y return ((ofn1  \in ufn) = y → {o0 : T | o0  \in ufn})
     then [eta exist (λ o0 : T, o0  \in ufn) ofn1]
     else fun=> exist (λ o0 : T, o0  \in ufn) ofn2 pfb) pfc).
-  enough (forall(ofn1 ofn2 : T) (ufn : {set T}) pfa pfb b ha,
+  enough (forall (ofn1 ofn2 : T) (ufn : {set T}) pfa pfb b pfc,
     exist (λ o0 : T, o0  \in ufn) ofn1 pfa = 
-    fn ofn1 ofn2 ufn pfa pfb b ha) as hb.
-  eapply hb.
+    fn ofn1 ofn2 ufn pfa pfb b pfc) as ha.
+  eapply ha.
   intros *.
   destruct b; cbn.
   f_equal.
-  eapply  Classical_Prop.proof_irrelevance.
+  eapply Classical_Prop.proof_irrelevance.
   congruence.
 Qed.
