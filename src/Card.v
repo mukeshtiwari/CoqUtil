@@ -1,8 +1,10 @@
+
 From Stdlib Require Import Utf8 Fin Psatz List.
 
-Definition cardinality (n : nat) (A : Type) : Prop :=
-  exists (f : A -> Fin.t n) (g : Fin.t n -> A),
-    (forall x, g (f x) = x) ∧ (forall y, f (g y) = y).
+
+Definition cardinality (A : Type) (B : Type) : Prop :=
+  exists (f : A -> B) (g : B -> A),
+  (forall x, g (f x) = x) ∧ (forall y, f (g y) = y).
 
 
 Definition bool_to_Fin_2 (x : bool) : Fin.t 2 :=
@@ -17,14 +19,12 @@ Definition Fin_2_to_bool (y : Fin.t 2) : bool :=
   end.
 
 Theorem bool_cardinality_2 :
-  cardinality 2 bool.
+  cardinality (Fin.t 2) bool.
 Proof.
   unfold cardinality.
-  exists bool_to_Fin_2.
   exists Fin_2_to_bool.
+  exists bool_to_Fin_2.
   split.
-  +
-    destruct x; cbn; reflexivity.
   +
     intro y. 
     refine
@@ -37,8 +37,8 @@ Proof.
           match eb as eb' in Fin.t n'' return n'' = 2 -> Fin.t n'' -> Type 
           with 
           | _ => fun pfa eb' => 
-            (bool_to_Fin_2 (Fin_2_to_bool (eq_rect _ Fin.t eb' 2 pfa))) = 
-              (eq_rect _ Fin.t eb' 2 pfa)
+            bool_to_Fin_2 (Fin_2_to_bool (eq_rect _ Fin.t eb' 2 pfa)) = 
+            eq_rect _ Fin.t eb' 2 pfa
           end eq_refl eb
         | _ => fun _ => IDProp 
         end y')
@@ -63,4 +63,7 @@ Proof.
       assert (nw = 0). nia.
       subst. cbn. 
       refine match t with end.
+  +
+    intro y.
+    destruct y; cbn; reflexivity.
 Qed.
