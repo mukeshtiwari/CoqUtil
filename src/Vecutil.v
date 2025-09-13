@@ -20,7 +20,13 @@ Fail Fixpoint map2vec {A B C : Set} (f : A -> B -> C) n (vA : vec A n) (vB : vec
 
 (* opti in the elaboration *)
 Definition tail {A} n (v : vec A (S n)) : vec A n :=
-  match v as x in vec _ (S n) return vec A n with
+  match v as v' in vec _ n' return 
+    match n' return Type 
+    with 
+    | 0 =>  IDProp 
+    | S n'' => vec A n''
+    end  
+  with
   | vcons _ _ v => v
   end.
 
