@@ -68,7 +68,8 @@ Definition map2vec3 {A B C : Set} (f : A -> B -> C) : forall n, vec A n -> vec B
     | vnil => fun (_ : vec B 0) => vnil
     | vcons a k tA => (
       fun vB : vec B (S k) =>
-      match vB in vec _ p return (vec A (match p with 0 => 0 | S p => p end) -> vec C p) with
+      match vB in vec _ p return (vec A (Nat.pred p) -> vec C p) 
+      with
       | vnil => fun _ => vnil
       | vcons b p tB => fun tA => vcons (f a b) p (rec p tA tB)
       end tA
