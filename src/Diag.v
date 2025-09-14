@@ -16,7 +16,15 @@ Section Inv.
   Proof.
     intros n v.
     refine 
-      match v in Vector.t _ n  with 
+      match v in Vector.t _ n' 
+        return 
+        (match n' as n'' return Vector.t _ n'' -> Prop 
+        with 
+        | 0 => fun (v : Vector.t _ 0) => v = @Vector.nil A
+        | S n' => fun (v : Vector.t _ (S n')) => 
+          exists (h : A) (t : Vector.t A n'), v = Vector.cons _ h _ t 
+        end v) 
+      with 
       | [] => eq_refl
       | h :: t => ex_intro _ h (ex_intro _ t eq_refl)
       end.
