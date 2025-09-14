@@ -114,6 +114,24 @@ Section Inv.
       end.
   Defined.
 
+  Lemma diag_inv_s_convoy : ∀ (x y : nat) (d : diag (S x) (S y)),
+    exists (u : diag x y), d = scase x y u.
+  Proof.
+    intros x y d.
+    refine
+      (match d as d' in diag x' y' return 
+        (match x', y' return diag x' y' -> Prop 
+        with 
+        | S x'', S y'' => fun (ha : diag (S x'') (S y'')) => 
+          exists (d'' : diag x'' y''), ha = scase x'' y'' d''
+        | _ , _ => fun _ => IDProp
+        end d')
+      with 
+      | zcase => idProp
+      | scase x' y' d' => ex_intro _ d' eq_refl
+      end).
+  Defined.
+
     
 
   Lemma diag_refl {x} : diag x x.
