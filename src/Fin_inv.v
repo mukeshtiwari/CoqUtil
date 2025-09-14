@@ -31,6 +31,43 @@ Proof.
       exists t; exact eq_refl.
 Defined.
 
+
+Theorem fin_inv_destruct : ∀ (n : nat) (f : Fin.t n), 
+  match n return Fin.t n -> Type 
+  with 
+  | 0 => fun _  => IDProp
+  | S n'  => fun ft => ((ft = @Fin.F1 n') + Sigma (u : Fin.t n'), ft = Fin.FS u)%type
+  end f.
+Proof.
+  intros *.
+  destruct f as [|f'];
+  [left; exact eq_refl | right].
+  exists f. exact eq_refl.
+Defined.
+
+
+Theorem fin_inv_convoy : ∀ (n : nat) (f : Fin.t n), 
+  match n return Fin.t n -> Type 
+  with 
+  | 0 => fun _  => IDProp
+  | S n'  => fun ft => ((ft = @Fin.F1 n') + Sigma (u : Fin.t n'), ft = Fin.FS u)%type
+  end f.
+Proof.
+  intros *.
+  refine
+    (match f as f' in Fin.t n' return 
+      (match n' return Fin.t n' -> Type 
+      with 
+      | 0 => fun _  => IDProp
+      | S n'  => fun ft => ((ft = @Fin.F1 n') + 
+        Sigma (u : Fin.t n'), ft = Fin.FS u)%type
+      end f')
+    with 
+    | Fin.F1 => inl eq_refl
+    | Fin.FS f' => inr (exist _ f' eq_refl)
+    end). 
+Defined.
+
     
 
 Lemma Fin_t_S_inv : ∀ n (P : t (S n) → Type),
