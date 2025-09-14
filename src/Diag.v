@@ -50,6 +50,32 @@ Section Inv.
     + exact (ex_intro _ d eq_refl).
   Defined.
 
+ Theorem diag_inv_convoy : ∀ (x y : nat) (d : diag x y), 
+    match x, y return diag x y -> Prop 
+    with 
+    | 0, 0 => fun (ha : diag 0 0) => ha = zcase
+    | S x, S y => fun (ha : diag (S x) (S y)) => 
+      exists (d : diag x y), ha = scase x y d
+    | _ , _ => fun _ => False  
+    end d.
+  Proof.
+    intros x y d.
+    refine
+      (match d as d' in diag x' y' return 
+        (match x', y' return diag x' y' -> Prop 
+        with 
+        | 0, 0 => fun (ha : diag 0 0) => ha = zcase
+        | S x'', S y'' => fun (ha : diag (S x'') (S y'')) => 
+          exists (d'' : diag x'' y''), ha = scase x'' y'' d''
+        | _ , _ => fun _ => False  
+        end d')
+      with 
+      | zcase => eq_refl
+      | scase x' y' d' => (ex_intro _ d' eq_refl)
+      end).
+  Defined.
+
+
   Lemma diag_inv_z : ∀ (d : diag 0 0), d = zcase.
   Proof.
     intro d.
