@@ -92,6 +92,31 @@ Proof.
 Defined.
 
 
+Lemma Fin_t_S_inv_convoy : ∀ (n : nat) (P : t (S n) → Type),
+   P F1 → (∀ (i : Fin.t n), P (FS i)) →  ∀ (i : Fin.t (S n)), P i.
+Proof.
+  intros * ha hb i.
+  refine
+  (match i as i' in Fin.t n'
+    return 
+    ∀ (pfa : S n = n'),
+    (match n' as n'' return n' = n'' -> Fin.t n'' -> Type 
+    with 
+    | 0 => fun _ _ => IDProp 
+    | S n'' => fun (pfb : n' = S n'') (f : Fin.t (S n'')) => 
+      P (eq_rect (S n'') Fin.t f _ (eq_sym (eq_trans pfa pfb))) 
+    end eq_refl i')
+  with 
+  | Fin.F1 => fun pfa => _ 
+  | Fin.FS f' => fun pfa => _ 
+  end eq_refl); cbn;
+  inversion pfa as [pfaa]; subst;
+  assert (pfa = eq_refl) by apply Eqdep_dec.UIP_refl_nat;
+  subst; cbn; [exact ha | exact (hb f')].
+Defined.
+  
+
+
 Lemma Fin_t_S_inv_gen : ∀ (P : ∀ (n : nat), t (S n) → Type),
    (∀ (n : nat), P n F1) → 
    (∀ (n : nat) (i : Fin.t n), P n (FS i)) →  
