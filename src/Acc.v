@@ -1,11 +1,7 @@
-Require Import Lia
-  Coq.Unicode.Utf8
-  Coq.Bool.Bool 
-  Coq.Init.Byte
-  Coq.NArith.NArith
-  Coq.Strings.Byte
-  Coq.ZArith.ZArith
-  Coq.Lists.List.
+From Stdlib Require Import Psatz Utf8
+  Bool Init.Byte NArith RelationClasses
+  PeanoNat Psatz Inverse_Image Wf_nat
+  Strings.Byte.
 
 Lemma N_acc : forall n : nat, Acc lt n.
 Proof.
@@ -22,14 +18,9 @@ Proof.
 Qed.
 
 
-From Coq Require Import List Utf8 RelationClasses
-  PeanoNat Psatz Inverse_Image Wf_nat.
-
-
-
 Section Wf. 
 
-  Theorem well_founded_fn {A : Type} (P : A -> Prop) : forall (f : A -> nat),
+  Theorem well_founded_fn {A : Type} (P : A -> Type) : forall (f : A -> nat),
     (forall (a : A), (forall (b : A), f b < f a -> P b) -> P a) -> forall (a : A), P a.
   Proof.
     intros f Ha a.
@@ -44,7 +35,8 @@ Section Wf.
       end eq_refl) a _); [abstract nia | eapply lt_wf].
   Qed.
 
-  Theorem well_founded_acc {A : Type} (P : A -> Prop) : forall (f : A -> nat),
+
+  Theorem well_founded_acc {A : Type} (P : A -> Type) : forall (f : A -> nat),
     (forall (a : A), (forall (b : A), f b < f a -> P b) -> P a) -> 
     forall (a : A), P a.
   Proof.
@@ -56,18 +48,12 @@ Section Wf.
       end) a _); eapply lt_wf.
   Qed.
 
-
-
-
-  Theorem well_founded_ind {A : Type} (P : A -> Prop) : forall (f : A -> nat),
+  Theorem well_founded_prop {A : Type} (P : A -> Prop) : forall (f : A -> nat),
     (forall (a : A), (forall (b : A), f b < f a -> P b) -> P a) -> forall (a : A), P a.
   Proof.
     intros f Ha a.
-    apply (well_founded_ind (wf_inverse_image _ _ lt f lt_wf)).
-    intros * Hb.
-    refine (Ha x (fun (b : A) (Hc : f b < f x) => Hb _ Hc )).
+    eapply (@well_founded_ind A (fun x y => f x < f y) 
+      (@wf_inverse_image A nat lt f lt_wf) P Ha a).
   Qed.
-
-
 
 End Wf. 
