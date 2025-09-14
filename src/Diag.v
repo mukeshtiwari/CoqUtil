@@ -86,6 +86,23 @@ Section Inv.
       end.
   Defined.
 
+  Lemma diag_inv_z_convoy : ∀ (d : diag 0 0), d = zcase.
+  Proof.
+    intro d.
+    refine 
+      (match d as d' in diag x' y' return 
+        (match x', y' return diag x' y' -> Prop 
+        with 
+        | 0, 0 => fun (ha : diag 0 0) => ha = zcase
+        | _ , _ => fun _ => IDProp
+        end d')
+      with 
+      | zcase => eq_refl 
+      | _ => idProp
+      end).
+  Defined.
+ 
+
   Lemma diag_inv_s : ∀ (x y : nat) (d : diag (S x) (S y)),
     exists (u : diag x y), d = scase x y u.
   Proof.
