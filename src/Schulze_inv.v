@@ -1,4 +1,4 @@
-From Coq Require Import ZArith List Utf8.
+From Stdlib Require Import ZArith List Utf8.
 Import ListNotations.
 Open Scope Z.
 
@@ -92,6 +92,97 @@ Section Schulze.
       Count bs (winners w).
 
 
+
+  Theorem count_inv_destruct : ∀ (bs : list ballot) (s : state) (e : Count bs s), 
+    match s as s' in state return Count _ s' -> Prop
+    with 
+    | partial (us, inbs) m => 
+      match inbs as inbs' return (Count _ (partial (us, inbs') m) -> Prop)
+      with 
+      | [] => fun (ea : Count bs (partial (us, []) m)) => 
+          (∃ (hu : us = bs)  (hv : ∀ c d : cand, m c d = 0),  ea = ax _ us m hu hv) ∨
+          (∃ u m' hu hv hw, ea = cvalid _ u us m' m [] hu hv hw)
+      | inbsh :: inbst => fun (ea : Count bs (partial (us, inbsh :: inbst) m)) => 
+        (∃ u m' ha hb hc, ea = cvalid _ u us m' m (inbsh :: inbst) ha hb hc) ∨ 
+        (∃ (ha : Count bs (partial (inbsh :: us, inbst) m)) (hb : exists c, (inbsh c = 0)%nat),
+          ea = cinvalid _ inbsh us m inbst ha hb)
+      end
+    | winners f => fun ea => ∃ m inbs d ha hb hc, ea = fin _ m inbs f d ha hb hc
+    end e.
+  Proof.
+    intros *.
+    destruct e as [us m ha hb | u us n nm inbs ha hb hc | u us m inbs ha | m inbs w d ha hb hc].
+    +
+      left; repeat eexists.
+    +
+      destruct inbs as [| inbsh inbst].
+      ++
+        right; repeat eexists.
+      ++
+        left; repeat eexists.
+    +
+      right; repeat eexists.
+    +
+      repeat eexists.
+  Defined.
+
+  Theorem count_inv_convoy : ∀ (bs : list ballot) (s : state) (e : Count bs s), 
+    match s as s' in state return Count _ s' -> Prop
+    with 
+    | partial (us, inbs) m => 
+      match inbs as inbs' return (Count _ (partial (us, inbs') m) -> Prop)
+      with 
+      | [] => fun (ea : Count bs (partial (us, []) m)) => 
+          ((∃ (hu : us = bs)  (hv : ∀ c d : cand, m c d = 0),  ea = ax _ us m hu hv) ∨
+          (∃ u m' hu hv hw, ea = cvalid _ u us m' m [] hu hv hw))%type
+      | inbsh :: inbst => fun (ea : Count bs (partial (us, inbsh :: inbst) m)) => 
+        ((∃ u m' ha hb hc, ea = cvalid _ u us m' m (inbsh :: inbst) ha hb hc) ∨ 
+        (∃ (ha : Count bs (partial (inbsh :: us, inbst) m)) (hb : exists c, (inbsh c = 0)%nat),
+          ea = cinvalid _ inbsh us m inbst ha hb))%type 
+      end
+    | winners f => fun ea => (∃ m inbs d ha hb hc, ea = fin _ m inbs f d ha hb hc)%type
+    end e.
+  Proof.
+    intros *.
+    refine
+    (match e as e' in Count _ s' return
+      (match s' return Count _ s' -> Prop
+      with 
+      | partial (us, inbs) m => 
+        match inbs as inbs' return (Count _ (partial (us, inbs') m) -> Prop)
+        with 
+        | [] => fun (ea : Count bs (partial (us, []) m)) => 
+            ((∃ (hu : us = bs)  (hv : ∀ c d : cand, m c d = 0),  ea = ax _ us m hu hv) ∨
+            (∃ u m' hu hv hw, ea = cvalid _ u us m' m [] hu hv hw))%type
+        | inbsh :: inbst => fun (ea : Count bs (partial (us, inbsh :: inbst) m)) => 
+          ((∃ u m' ha hb hc, ea = cvalid _ u us m' m (inbsh :: inbst) ha hb hc) ∨ 
+          (∃ (ha : Count bs (partial (inbsh :: us, inbst) m)) (hb : exists c, (inbsh c = 0)%nat),
+            ea = cinvalid _ inbsh us m inbst ha hb))%type
+        end
+      | winners f => fun ea => ∃ m inbs d ha hb hc, (ea = fin _ m inbs f d ha hb hc)%type
+      end e') 
+    with 
+    | ax _ us m ha hb => or_introl (ex_intro _ ha (ex_intro _ hb eq_refl))
+    | cvalid _ u us m nm inbs ha hb hc => _ 
+    | cinvalid _ u us m inbs ha hb => _ 
+    | fin _ m inbs w d ha hb hc => _ 
+    end).
+    destruct inbs as [| inbsh inbst].
+    +
+      right; repeat eexists.
+    +
+      left; repeat eexists.
+    +
+      right; repeat eexists.
+    +
+      repeat eexists.
+  Defined.
+    
+
+      
+
+  
+
   Theorem count_inv : ∀ (bs : list ballot) (s : state) (e : Count bs s), 
     match e as e' in Count _ s' return Count _ s' -> Type 
     with 
@@ -123,7 +214,7 @@ Section Schulze.
           (∃ u m' hu hv hw, c = cvalid _ u us m' m [] hu hv hw)
         | vxh :: vxt => fun _ => IDProp
         end
-      | winners _ => fun _ => IDProp 
+      | winners _ => fun c => IDProp 
       end.
   Defined.
 
@@ -134,6 +225,9 @@ Section Schulze.
     (∃ u m' ha hb hc, e = cvalid _ u us m' m [] ha hb hc).
   Proof.
     intros *.
+    pose proof count_inv_convoy bs _ e as ha.
+    cbn in ha. exact ha.
+    (* 
     refine 
       match e as e' in Count _ s' return count_inv_ax_ret_type s' e' with
       | ax _ us' m' ha hb => _ 
@@ -145,7 +239,7 @@ Section Schulze.
     +
       destruct inbs as [| h t].
       right; repeat eexists.
-      exact idProp.
+      exact idProp. *)
   Defined.
 
 
@@ -167,6 +261,10 @@ Section Schulze.
     ∃ m inbs d ha hb hc, e = fin _ m inbs f d ha hb hc.
   Proof.
     intros *.
+    pose proof count_inv_convoy _ _ e as ha.
+    cbn in ha.
+    exact ha.
+    (* 
     refine 
       match e as e' in Count _ s'  
         return count_inv_fin_ret_type s' e'  
@@ -174,7 +272,7 @@ Section Schulze.
       | fin _ m' inbs' f' d' ha' hb' hc' => _
       | _ => idProp
       end.
-    repeat eexists.
+    repeat eexists. *)
   Defined.
 
 
