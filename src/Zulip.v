@@ -73,26 +73,26 @@ Section Gcd.
         { apply Nat.ltb_lt. lia. }
         rewrite H0.
         apply gcd_rec_irr.
-  Qed.
+  Defined.
 
 
-   Theorem gcd_n_m_swap : forall (n m : nat), n <= m -> gcd n m = gcd n (m - n).
+  Theorem gcd_n_m_swap : forall (n m : nat), n <= m -> gcd n m = gcd n (m - n).
    Proof.
      intros n m Ha.
      unfold gcd at 1; simpl.
      destruct n as [|n].
      +
-       cbn; nia.
+       cbn; abstract nia.
      +
        destruct m as [|m].
        ++
-         simpl. nia.
+         simpl. abstract nia.
        ++
          assert (Hb: S m <? S n = false).
          eapply Nat.ltb_ge; exact Ha.
          rewrite Hb.
          eapply gcd_rec_irr.
-   Qed.
+  Defined.
          
   Theorem gcd_ind : forall (P : nat -> nat -> nat -> Type),
       (forall m, P 0 m m) ->
@@ -161,12 +161,12 @@ Section Gcd.
      eapply frec; try assumption.
      rewrite gcd_m_n_swap.
      simpl; exact IHn0.
-     nia.
+     abstract nia.
    +
      eapply srec; try assumption.
      rewrite gcd_n_m_swap.
      simpl; exact IHn0.
-     nia.
+     abstract nia.
   Defined.
 
   
@@ -190,4 +190,5 @@ Section Gcd.
 
 End Gcd.
 
-Eval compute in gcd_fix_gcd_type 10 20.
+From Stdlib Require Import Extraction.
+Recursive Extraction gcd_fix_gcd_type.
