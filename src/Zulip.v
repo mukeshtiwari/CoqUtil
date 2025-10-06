@@ -124,17 +124,17 @@ Section Gcd.
         eapply fn.
         pose proof (Acc_inv acc) as Hh.
         eapply Hh.
-        nia.
+        (abstract nia).
       ++
         eapply Nat.ltb_ge in Hg.
         eapply Hd; subst; try assumption; try (abstract nia).
         eapply fn.
         pose proof (Acc_inv acc) as Hh.
         eapply Hh.
-        nia.
+        (abstract nia).
     +
       eapply lt_wf.
-  Qed.
+  Defined.
   
 
   
@@ -189,3 +189,5 @@ Section Gcd.
   
 
 End Gcd.
+
+Eval compute in gcd_fix_gcd_type 10 20.
