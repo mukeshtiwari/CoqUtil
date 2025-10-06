@@ -190,5 +190,7 @@ Section Gcd.
 
 End Gcd.
 
+
+Eval compute in gcd_fix_gcd_type 10 19.
 From Stdlib Require Import Extraction.
 Recursive Extraction gcd_fix_gcd_type.
